@@ -14,9 +14,11 @@ import {
   TextInput,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import { colours } from "../../lib/theme/colours";
 import { useTickets, Ticket } from "../../contexts/TicketsContext";
 import { cancelTicket } from "../../lib/ticketsApi";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
 type TabType = "Upcoming" | "All" | "Past";
 
@@ -91,64 +93,65 @@ export default function MyTickets() {
 
   const bottomPad = 100 + Math.max(insets.bottom, 0);
 
-  const renderTicketCard = (t: Ticket) => {
+  const renderTicketCard = (t: Ticket, index: number) => {
     const isUsed = t.used;
     const isPast = new Date(t.date) < new Date();
     const showDeleteButton = isUsed;
 
     return (
-      <Pressable
-        key={t.id}
-        style={[styles.ticketItem, (isUsed || isPast) && styles.usedTicketItem]}
-        onPress={() => setSelectedTicket(t)}
-      >
-        {t.eventImageUrl && (
-          <Image
-            source={{ uri: t.eventImageUrl }}
-            style={[styles.eventImage, (isUsed || isPast) && styles.usedEventImage]}
-          />
-        )}
-        <View style={styles.ticketContent}>
-          <View style={styles.ticketHeader}>
-            <Text style={[styles.ticketTitle, (isUsed || isPast) && styles.usedTicketTitle]} numberOfLines={2}>
-              {t.title}
+      <Animated.View key={t.id} entering={FadeInDown.delay(index * 50).springify()}>
+        <Pressable
+          style={[styles.ticketItem, (isUsed || isPast) && styles.usedTicketItem]}
+          onPress={() => setSelectedTicket(t)}
+        >
+          {t.eventImageUrl && (
+            <Image
+              source={{ uri: t.eventImageUrl }}
+              style={[styles.eventImage, (isUsed || isPast) && styles.usedEventImage]}
+            />
+          )}
+          <View style={styles.ticketContent}>
+            <View style={styles.ticketHeader}>
+              <Text style={[styles.ticketTitle, (isUsed || isPast) && styles.usedTicketTitle]} numberOfLines={2}>
+                {t.title}
+              </Text>
+              {isUsed && (
+                <View style={styles.usedBadge}>
+                  <Text style={styles.usedBadgeText}>Used</Text>
+                </View>
+              )}
+              {!isUsed && isPast && (
+                <View style={styles.expiredBadge}>
+                  <Text style={styles.expiredBadgeText}>Expired</Text>
+                </View>
+              )}
+            </View>
+            <Text style={[styles.ticketMeta, (isUsed || isPast) && styles.usedTicketMeta]}>
+              {`${t.dateLabelDate} ${t.dateLabelTime}`}
             </Text>
-            {isUsed && (
-              <View style={styles.usedBadge}>
-                <Text style={styles.usedBadgeText}>Used</Text>
-              </View>
-            )}
-            {!isUsed && isPast && (
-              <View style={styles.expiredBadge}>
-                <Text style={styles.expiredBadgeText}>Expired</Text>
-              </View>
+            <Text style={[styles.ticketMeta, (isUsed || isPast) && styles.usedTicketMeta]}>
+              {`Location: ${t.location}`}
+            </Text>
+            <Text style={[styles.ticketMeta, (isUsed || isPast) && styles.usedTicketMeta]}>
+              {`Price: ${t.price}`}
+            </Text>
+            {isUsed && t.usedAt && (
+              <Text style={styles.scannedText}>
+                Scanned on {new Date(t.usedAt).toLocaleDateString()}
+              </Text>
             )}
           </View>
-          <Text style={[styles.ticketMeta, (isUsed || isPast) && styles.usedTicketMeta]}>
-            {`${t.dateLabelDate} ${t.dateLabelTime}`}
-          </Text>
-          <Text style={[styles.ticketMeta, (isUsed || isPast) && styles.usedTicketMeta]}>
-            {`Location: ${t.location}`}
-          </Text>
-          <Text style={[styles.ticketMeta, (isUsed || isPast) && styles.usedTicketMeta]}>
-            {`Price: ${t.price}`}
-          </Text>
-          {isUsed && t.usedAt && (
-            <Text style={styles.scannedText}>
-              Scanned on {new Date(t.usedAt).toLocaleDateString()}
-            </Text>
+          {showDeleteButton && (
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={() => handleDeleteTicket(t)}
+              disabled={deletingTicketId === t.id}
+            >
+              <Text style={styles.deleteButtonText}>Delete</Text>
+            </TouchableOpacity>
           )}
-        </View>
-        {showDeleteButton && (
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={() => handleDeleteTicket(t)}
-            disabled={deletingTicketId === t.id}
-          >
-            <Text style={styles.deleteButtonText}>Delete</Text>
-          </TouchableOpacity>
-        )}
-      </Pressable>
+        </Pressable>
+      </Animated.View>
     );
   };
 
@@ -167,6 +170,7 @@ export default function MyTickets() {
     }
     return (
       <View style={styles.emptyState}>
+        <Ionicons name="ticket-outline" size={48} color={colours.textMuted} />
         <Text style={styles.emptyStateText}>{message}</Text>
         <Text style={styles.emptyStateSubtext}>Browse events to get tickets!</Text>
       </View>
@@ -221,7 +225,7 @@ export default function MyTickets() {
         }
       >
         {filteredTickets.length > 0
-          ? filteredTickets.map(renderTicketCard)
+          ? filteredTickets.map((ticket, index) => renderTicketCard(ticket, index))
           : renderEmptyState()}
       </ScrollView>
 
@@ -531,13 +535,14 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: "center",
     paddingTop: 60,
+    gap: 12,
   },
 
   emptyStateText: {
     fontSize: 18,
     fontWeight: "600",
     color: colours.textSecondary,
-    marginBottom: 8,
+    marginTop: 8,
   },
 
   emptyStateSubtext: {

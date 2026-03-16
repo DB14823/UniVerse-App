@@ -16,7 +16,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { getUserPosts, getCurrentUser, getUserProfile, Post } from "../../lib/postsApi";
 import { followUser, unfollowUser, checkFollowing, getFollowCounts } from "../../lib/followApi";
 import { colours } from "../../lib/theme/colours";
-import { shadows } from "../../lib/theme/colours";
 
 export default function ProfileStudent() {
   const router = useRouter();
@@ -262,7 +261,11 @@ export default function ProfileStudent() {
         {loading ? (
           <Text style={styles.loadingText}>Loading posts...</Text>
         ) : userPosts.length === 0 ? (
-          <Text style={styles.emptyText}>No posts yet</Text>
+          <View style={styles.emptyState}>
+            <Ionicons name="images-outline" size={48} color={colours.textMuted} />
+            <Text style={styles.emptyStateText}>No posts yet</Text>
+            <Text style={styles.emptyStateSubtext}>Posts will appear here</Text>
+          </View>
         ) : (
           <View style={styles.grid}>
             {userPosts.map((post) => (
@@ -352,16 +355,20 @@ const styles = StyleSheet.create({
 
   scrollArea: { flex: 1, paddingHorizontal: 16 },
 
-  avatarWrap: { alignItems: "center", marginTop: 10, marginBottom: 16 },
+  avatarWrap: { alignItems: "center", marginTop: 10, marginBottom: 16, paddingHorizontal: 20, paddingVertical: 10 },
 
   avatarWithGlow: {
-    ...shadows.glow,
+    shadowColor: "#8B5CF6",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.35,
+    shadowRadius: 15,
+    elevation: 8,
     borderRadius: 999,
   },
 
   avatarCircle: {
-    width: 150,
-    height: 150,
+    width: 130,
+    height: 130,
     borderRadius: 999,
     backgroundColor: colours.surface,
     borderWidth: 2,
@@ -391,7 +398,11 @@ const styles = StyleSheet.create({
     borderColor: colours.border,
     padding: 16,
     alignItems: "center",
-    ...shadows.small,
+    shadowColor: "#8B5CF6",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
 
   statNumber: {
@@ -436,11 +447,24 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
 
-  emptyText: {
+  emptyState: {
+    alignItems: "center",
+    paddingTop: 40,
+    gap: 8,
+  },
+
+  emptyStateText: {
+    textAlign: "center",
+    color: colours.textSecondary,
+    fontSize: 18,
+    fontWeight: "600",
+    marginTop: 8,
+  },
+
+  emptyStateSubtext: {
     textAlign: "center",
     color: colours.textMuted,
-    fontSize: 16,
-    marginTop: 20,
+    fontSize: 14,
   },
 
   followBtn: {

@@ -109,3 +109,11 @@ export const shadows = {
     elevation: 10,
   },
 };
+
+// Typography scale for consistency
+export const typography = {
+  heading: { fontSize: 24, fontWeight: "900" as const },
+  title: { fontSize: 20, fontWeight: "800" as const },
+  body: { fontSize: 16, fontWeight: "600" as const },
+  caption: { fontSize: 14, fontWeight: "500" as const },
+};

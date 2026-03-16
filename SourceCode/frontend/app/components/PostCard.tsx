@@ -7,6 +7,7 @@ import {
   Image as RNImage,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { colours } from "../../lib/theme/colours";
 
 interface PostCardProps {
@@ -168,7 +169,7 @@ export default function PostCard({
           onPress={onPress}
           activeOpacity={0.8}
         >
-          <Text style={styles.commentIcon}>💬</Text>
+          <Ionicons name="chatbubble-outline" size={18} color={colours.textSecondary} />
         </TouchableOpacity>
 
         <View style={styles.commentMeta}>
@@ -274,9 +275,6 @@ const styles = StyleSheet.create({
   },
   commentBtn: {
     marginRight: 4,
-  },
-  commentIcon: {
-    fontSize: 16,
   },
   commentMeta: {
     marginRight: 10,

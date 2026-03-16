@@ -23,6 +23,7 @@ import { getEvents, EventRecord } from "../../lib/eventsApi";
 import { getStaticMapUrl } from "../../lib/staticMaps";
 import { purchaseTicket } from "../../lib/ticketsApi";
 import { createPaymentIntent } from "../../lib/paymentsApi";
+import { addEventToCalendar, CalendarEventData } from "../../lib/calendar";
 import { useTickets, Ticket } from "../../contexts/TicketsContext";
 import { Alert } from "react-native";
 import {
@@ -30,6 +31,7 @@ import {
   initPaymentSheet,
   presentPaymentSheet,
 } from "@stripe/stripe-react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
 const EVENT_CATEGORIES = [
   { label: "All Categories", value: "All" },
@@ -216,54 +218,56 @@ export default function EventFeed() {
     };
   }, [selectedEvent]);
 
-  const renderEvent = useCallback(({ item: ev }: { item: EventItem }) => (
-    <Pressable
-      style={styles.eventCard}
-      onPress={() => setSelectedEvent(ev)}
-    >
-      <View style={styles.eventImage}>
-        {ev.eventImageUrl ? (
-          <Image
-            source={{ uri: ev.eventImageUrl }}
-            style={styles.eventImageFill}
-          />
-        ) : (
-          <View style={styles.eventImagePlaceholder}>
-            <Ionicons name="image-outline" size={40} color={colours.textMuted} />
-          </View>
-        )}
-        <View style={styles.categoryBadge}>
-          <Text style={styles.categoryBadgeText}>{ev.category}</Text>
-        </View>
-      </View>
-
-      <View style={styles.eventInfoRow}>
-        <View style={styles.eventLeft}>
-          <Text style={styles.eventTitle} numberOfLines={1}>
-            {ev.title}
-          </Text>
-          <Text style={styles.eventMeta} numberOfLines={1}>
-            {ev.dateLabelDate}
-          </Text>
-          {ev.dateLabelTime ? (
-            <Text style={styles.eventMeta} numberOfLines={1}>
-              {ev.dateLabelTime}
-            </Text>
-          ) : null}
-        </View>
-
-        <View style={styles.eventRight}>
-          <Text style={styles.eventMetaRight} numberOfLines={1}>
-            {ev.price}
-          </Text>
-          {ev.capacity !== null && ev.capacity !== undefined && (
-            <Text style={styles.capacityText} numberOfLines={1}>
-              {ev.ticketCount ?? 0}/{ev.capacity} tickets
-            </Text>
+  const renderEvent = useCallback(({ item: ev, index }: { item: EventItem; index: number }) => (
+    <Animated.View entering={FadeInDown.delay(index * 50).springify()}>
+      <Pressable
+        style={styles.eventCard}
+        onPress={() => setSelectedEvent(ev)}
+      >
+        <View style={styles.eventImage}>
+          {ev.eventImageUrl ? (
+            <Image
+              source={{ uri: ev.eventImageUrl }}
+              style={styles.eventImageFill}
+            />
+          ) : (
+            <View style={styles.eventImagePlaceholder}>
+              <Ionicons name="image-outline" size={40} color={colours.textMuted} />
+            </View>
           )}
+          <View style={styles.categoryBadge}>
+            <Text style={styles.categoryBadgeText}>{ev.category}</Text>
+          </View>
         </View>
-      </View>
-    </Pressable>
+
+        <View style={styles.eventInfoRow}>
+          <View style={styles.eventLeft}>
+            <Text style={styles.eventTitle} numberOfLines={1}>
+              {ev.title}
+            </Text>
+            <Text style={styles.eventMeta} numberOfLines={1}>
+              {ev.dateLabelDate}
+            </Text>
+            {ev.dateLabelTime ? (
+              <Text style={styles.eventMeta} numberOfLines={1}>
+                {ev.dateLabelTime}
+              </Text>
+            ) : null}
+          </View>
+
+          <View style={styles.eventRight}>
+            <Text style={styles.eventMetaRight} numberOfLines={1}>
+              {ev.price}
+            </Text>
+            {ev.capacity !== null && ev.capacity !== undefined && (
+              <Text style={styles.capacityText} numberOfLines={1}>
+                {ev.ticketCount ?? 0}/{ev.capacity} tickets
+              </Text>
+            )}
+          </View>
+        </View>
+      </Pressable>
+    </Animated.View>
   ), []);
 
   const keyExtractor = useCallback((item: EventItem) => item.id, []);
@@ -277,39 +281,48 @@ export default function EventFeed() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      <FilterBar
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        selectedValue={value}
-        onSelectValue={(val) => {
-          setValue(val);
-          setSelectedDay(val ?? "All");
-        }}
-        open={open}
-        setOpen={setOpen}
-        items={items}
-        setItems={setItems}
-        placeholder="Filter"
-        categoryValue={selectedCategory}
-        onSelectCategory={(val) => setSelectedCategory(val ?? "All")}
-        categoryOpen={categoryOpen}
-        setCategoryOpen={setCategoryOpen}
-        categoryItems={categoryItems}
-        setCategoryItems={setCategoryItems}
-        categoryPlaceholder="Category"
-      />
+      <View style={styles.filterBarContainer}>
+        <FilterBar
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          selectedValue={value}
+          onSelectValue={(val) => {
+            setValue(val);
+            setSelectedDay(val ?? "All");
+          }}
+          open={open}
+          setOpen={setOpen}
+          items={items}
+          setItems={setItems}
+          placeholder="Filter"
+          categoryValue={selectedCategory}
+          onSelectCategory={(val) => setSelectedCategory(val ?? "All")}
+          categoryOpen={categoryOpen}
+          setCategoryOpen={setCategoryOpen}
+          categoryItems={categoryItems}
+          setCategoryItems={setCategoryItems}
+          categoryPlaceholder="Category"
+        />
+      </View>
 
       <FlatList
         data={visibleEvents}
         renderItem={renderEvent}
         keyExtractor={keyExtractor}
         style={styles.scrollArea}
-        contentContainerStyle={{ paddingTop: 10, paddingBottom: 100 }}
+        contentContainerStyle={{ paddingTop: 20, paddingBottom: 100 }}
         keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
         ListHeaderComponent={renderSectionTitle}
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <Ionicons name="calendar-outline" size={48} color={colours.textMuted} />
+            <Text style={styles.emptyStateText}>No events found</Text>
+            <Text style={styles.emptyStateSubtext}>Try adjusting your filters</Text>
+          </View>
+        }
         removeClippedSubviews={true}
         maxToRenderPerBatch={10}
         windowSize={10}
@@ -461,8 +474,33 @@ export default function EventFeed() {
                             usedAt: null,
                           };
                           await addTicket(ticket);
-                          Alert.alert("Payment Successful", "Your ticket has been booked and is now available in My Tickets.");
-                          setSelectedEvent(null);
+                          Alert.alert(
+                            "Payment Successful",
+                            "Your ticket has been booked. Would you like to add this event to your calendar?",
+                            [
+                              {
+                                text: "Add to Calendar",
+                                onPress: async () => {
+                                  const calendarEvent: CalendarEventData = {
+                                    title: selectedEvent.title,
+                                    date: selectedEvent.date,
+                                    location: selectedEvent.location,
+                                    description: selectedEvent.description,
+                                  };
+                                  const eventId = await addEventToCalendar(calendarEvent);
+                                  if (eventId) {
+                                    Alert.alert("Event Added", "This event has been added to your calendar.");
+                                  }
+                                  setSelectedEvent(null);
+                                },
+                              },
+                              {
+                                text: "Done",
+                                style: "cancel",
+                                onPress: () => setSelectedEvent(null),
+                              },
+                            ]
+                          );
                         } catch (paymentError: any) {
                           Alert.alert("Payment Error", paymentError.message || "Failed to process payment.");
                         }
@@ -487,8 +525,33 @@ export default function EventFeed() {
                             usedAt: null,
                           };
                           await addTicket(ticket);
-                          Alert.alert("Ticket added", "Your ticket is now available in My Tickets.");
-                          setSelectedEvent(null);
+                          Alert.alert(
+                            "Ticket Added",
+                            "Your ticket is ready. Would you like to add this event to your calendar?",
+                            [
+                              {
+                                text: "Add to Calendar",
+                                onPress: async () => {
+                                  const calendarEvent: CalendarEventData = {
+                                    title: selectedEvent.title,
+                                    date: selectedEvent.date,
+                                    location: selectedEvent.location,
+                                    description: selectedEvent.description,
+                                  };
+                                  const eventId = await addEventToCalendar(calendarEvent);
+                                  if (eventId) {
+                                    Alert.alert("Event Added", "This event has been added to your calendar.");
+                                  }
+                                  setSelectedEvent(null);
+                                },
+                              },
+                              {
+                                text: "Done",
+                                style: "cancel",
+                                onPress: () => setSelectedEvent(null),
+                              },
+                            ]
+                          );
                         } catch (error: any) {
                           Alert.alert("Error", error.message || "Failed to book ticket.");
                         }
@@ -525,6 +588,10 @@ const styles = StyleSheet.create({
     backgroundColor: colours.background,
   },
 
+  filterBarContainer: {
+    backgroundColor: colours.background,
+  },
+
   scrollArea: {
     flex: 1,
     paddingHorizontal: 16,
@@ -543,7 +610,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     borderWidth: 1,
     borderColor: colours.border,
-    shadowColor: "#000",
+    shadowColor: "#8B5CF6",
     shadowOpacity: Platform.OS === "ios" ? 0.12 : 0.32,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 6,
@@ -585,10 +652,12 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 10,
     left: 10,
-    backgroundColor: "rgba(0,0,0,0.6)",
+    backgroundColor: colours.surfaceGlass,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colours.border,
   },
 
   categoryBadgeText: {
@@ -730,4 +799,22 @@ modalCloseText: {
   fontWeight: "700",
   color: colours.textPrimary,
 },
+
+  emptyState: {
+    alignItems: "center",
+    paddingTop: 60,
+    gap: 8,
+  },
+
+  emptyStateText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: colours.textSecondary,
+    marginTop: 8,
+  },
+
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: colours.textMuted,
+  },
 });

@@ -52,7 +52,7 @@ export default function BottomNavStudent({ activeTab, onTabPress }: Props) {
 
   return (
     <View style={styles.bottomNav} accessibilityRole="tablist">
-      {TABS.map((tab, idx) => {
+      {TABS.map((tab) => {
         const isActive = activeTab === tab.key;
 
         return (
@@ -63,23 +63,26 @@ export default function BottomNavStudent({ activeTab, onTabPress }: Props) {
             onPress={() => handlePress(tab.key)}
             onPressIn={() => pressIn(tab.key)}
             onPressOut={() => pressOut(tab.key)}
-            style={[
-              styles.navButton,
-              idx !== 0 && styles.navButtonSeparator,
-              isActive && styles.navButtonActive,
-            ]}
+            style={styles.navButton}
           >
-            <Animated.View style={{ transform: [{ scale: scales[tab.key] }], alignItems: "center" }}>
+            <Animated.View
+              style={[
+                styles.tabContent,
+                { transform: [{ scale: scales[tab.key] }] },
+                isActive && styles.activeTabContent,
+              ]}
+            >
               <Ionicons
-                name={isActive ? tab.icon : (tab.icon + "-outline") as any}
-                size={24}
-                color={isActive ? colours.textPrimary : colours.textMuted}
+                name={isActive ? tab.icon : (`${tab.icon}-outline` as any)}
+                size={22}
+                color={isActive ? colours.primary : colours.textMuted}
               />
               <Text
                 style={[styles.navButtonText, isActive && styles.navButtonTextActive]}
               >
                 {tab.label}
               </Text>
+              {isActive && <View style={styles.activeDot} />}
             </Animated.View>
           </Pressable>
         );
@@ -91,42 +94,49 @@ export default function BottomNavStudent({ activeTab, onTabPress }: Props) {
 const styles = StyleSheet.create({
   bottomNav: {
     flexDirection: "row",
-    borderTopWidth: 1,
     backgroundColor: colours.surface,
+    borderTopWidth: 1,
     borderTopColor: colours.border,
-    height: 72,
-    paddingVertical: 8,
-    paddingHorizontal: 0,
+    height: 70,
+    paddingBottom: 8,
+    paddingTop: 6,
   },
 
   navButton: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    height: "100%",
-    borderRadius: 0,
-    marginHorizontal: 0,
-    backgroundColor: "transparent",
-    gap: 4,
   },
 
-  navButtonActive: {
-    backgroundColor: colours.surfaceElevated,
+  tabContent: {
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+
+  activeTabContent: {
+    backgroundColor: colours.glass,
   },
 
   navButtonText: {
     color: colours.textMuted,
-    fontWeight: "700",
-    fontSize: 12,
+    fontWeight: "600",
+    fontSize: 11,
   },
 
   navButtonTextActive: {
-    color: colours.textPrimary,
-    fontWeight: "800",
+    color: colours.primary,
+    fontWeight: "700",
   },
 
-  navButtonSeparator: {
-    borderLeftWidth: 1,
-    borderLeftColor: colours.border,
+  activeDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colours.primary,
+    position: "absolute",
+    bottom: -2,
   },
 });

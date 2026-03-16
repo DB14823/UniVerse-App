@@ -59,7 +59,7 @@ export default function FilterBar({
           autoCapitalize="none"
           returnKeyType="search"
         />
-        <Text style={styles.searchIcon}>⌕</Text>
+        <Ionicons name="search" size={18} color={colours.textSecondary} />
       </View>
 
       {/* Dropdowns side by side */}
@@ -101,8 +101,8 @@ export default function FilterBar({
                 <Ionicons name="checkmark" size={16} color={colours.secondary} />
               )}
               listMode="SCROLLVIEW"
-              zIndex={2000}
-              zIndexInverse={2000}
+              zIndex={1000}
+              zIndexInverse={1000}
             />
           </View>
         )}
@@ -143,8 +143,8 @@ export default function FilterBar({
               <Ionicons name="checkmark" size={16} color={colours.secondary} />
             )}
             listMode="SCROLLVIEW"
-            zIndex={1000}
-            zIndexInverse={1000}
+            zIndex={500}
+            zIndexInverse={500}
           />
         </View>
       </View>
@@ -156,8 +156,8 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 4,
-    zIndex: 3000,
+    paddingBottom: 12,
+    backgroundColor: colours.background,
   },
 
   searchWrap: {
@@ -180,11 +180,6 @@ const styles = StyleSheet.create({
     paddingRight: 10,
   },
 
-  searchIcon: {
-    color: "rgba(255,255,255,0.7)",
-    fontSize: 18,
-    marginLeft: 8,
-  },
 
   dropdownsRow: {
     flexDirection: "row",
@@ -194,7 +189,6 @@ const styles = StyleSheet.create({
   dropdownWrap: {
     flex: 1,
     height: 40,
-    zIndex: 4000,
   },
 
   dropdown: {
@@ -216,7 +210,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: colours.surfaceElevated,
     elevation: 8,
-    zIndex: 2000,
   },
 
   dropdownContainerOpen: {
