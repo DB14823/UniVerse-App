@@ -38,11 +38,15 @@ UniVerse is a university events management app where:
 
 ## 🟡 Important Features
 
-### 5. QR Code Scanner for Organisations
-**Current gap:** Students have QR codes but organisations have no way to validate them.
-- Add a "Scan Tickets" tab for organisations
-- Use camera to scan student QR codes
-- Mark tickets as "used" to prevent duplicate entry
+### 5. QR Code Scanner for Organisations ✅ COMPLETED
+- Added `used` and `usedAt` fields to Ticket model
+- Created `validateTicket` API endpoint for organisations
+- Added `scanTickets.tsx` screen with camera integration
+- Implemented QR code scanning via expo-camera
+- Added manual ticket ID entry fallback
+- Shows validation results (student info, event details)
+- Tracks recent successful scans
+- Fixed duplicate scan issue with ref-based debouncing
 
 ### 6. Comments on Posts ✅ COMPLETED
 - Added Comment model to Prisma schema
@@ -136,6 +140,23 @@ model Comment {
   @@index([userId])
 }
 
+// Ticket model updated with validation tracking
+model Ticket {
+  id         String    @id @default(uuid())
+  eventId    String
+  studentId  String
+  createdAt  DateTime  @default(now())
+  used       Boolean   @default(false)  // Track if ticket has been scanned
+  usedAt     DateTime?                   // When ticket was validated
+
+  event      Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  student    Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, eventId])
+  @@index([eventId])
+  @@index([studentId])
+}
+
 // Potential new models
 model Follow {
   id          String   @id @default(uuid())
@@ -165,7 +186,7 @@ model Notification {
 4. ~~Hashtag search~~ ✅
 5. ~~Event categories~~ ✅
 6. ~~Comments on posts~~ ✅
-7. **QR scanner for orgs** (completes ticket flow)
+7. ~~QR scanner for orgs~~ ✅ (completes ticket flow)
 8. **Notifications system** (significant work but high value)
 9. **Follow system** (social features)
 10. **Polish and remaining features**

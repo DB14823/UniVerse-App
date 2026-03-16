@@ -61,6 +61,7 @@ async function getAuthToken(): Promise<string | null> {
 
 export interface TicketRecord {
   id: string; // this will actually be the event id, to keep compatibility with existing frontend
+  ticketId: string; // the actual ticket id for QR codes
   title: string;
   description: string;
   date: string;
@@ -118,4 +119,38 @@ export async function cancelTicket(eventId: string): Promise<void> {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
+}
+
+export interface ValidatedTicket {
+  id: string;
+  used: boolean;
+  usedAt: string | null;
+  event: {
+    title: string;
+    date: string;
+    location: string;
+  };
+  student: {
+    id: string;
+    name: string | null;
+    email: string;
+  };
+}
+
+export async function validateTicket(ticketId: string): Promise<{ success: boolean; ticket: ValidatedTicket }> {
+  const token = await getAuthToken();
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  const data = await fetchWithAuth(`${API_URL}/tickets/validate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ ticketId }),
+  });
+
+  return data as { success: boolean; ticket: ValidatedTicket };
 }

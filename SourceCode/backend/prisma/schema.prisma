@@ -86,13 +86,15 @@ model Comment {
 }
 
 model Ticket {
-  id         String   @id @default(uuid())
+  id         String    @id @default(uuid())
   eventId    String
   studentId  String
-  createdAt  DateTime @default(now())
+  createdAt  DateTime  @default(now())
+  used       Boolean   @default(false)
+  usedAt     DateTime?
 
-  event      Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  event      Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  student    Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, eventId])
   @@index([eventId])

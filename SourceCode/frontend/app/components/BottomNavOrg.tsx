@@ -12,6 +12,7 @@ interface Props {
 const TABS = [
   { key: "myEvents", label: "My Events", icon: "calendar" as const },
   { key: "createEvent", label: "Create", icon: "add-circle" as const },
+  { key: "scan", label: "Scan", icon: "qr-scanner" as const },
   { key: "social", label: "Social", icon: "people" as const },
 ];
 

@@ -150,7 +150,7 @@ export default function MyTickets() {
                     <Image
                       source={{
                         uri: `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(
-                          selectedTicket.id
+                          selectedTicket.ticketId
                         )}&size=300x300`,
                       }}
                       style={[styles.qrCode, { opacity: pressed ? 0.7 : 1 }]}
@@ -186,7 +186,7 @@ export default function MyTickets() {
               <Image
                 source={{
                   uri: `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(
-                    fullscreenQRTicket.id
+                    fullscreenQRTicket.ticketId
                   )}&size=500x500`,
                 }}
                 style={styles.fullscreenQRCode}

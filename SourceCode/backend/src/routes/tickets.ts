@@ -9,4 +9,7 @@ router.post("/", authMiddleware, ticketsController.createTicket);
 router.get("/mine", authMiddleware, ticketsController.getMyTickets);
 router.delete("/:id", authMiddleware, ticketsController.deleteTicket);
 
+// organisation endpoint
+router.post("/validate", authMiddleware, ticketsController.validateTicket);
+
 export default router;

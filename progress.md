@@ -10,9 +10,6 @@
 ## Next Steps
 
 ### Short Term
-1. Add QR code scanner for organisations
-
-### Medium Term
 1. Build notifications system
 2. Follow system for users and organisations
 
@@ -20,6 +17,7 @@
 
 ## Recently Completed
 
+- ✅ QR code scanner for organisations (camera integration, ticket validation, recent scans)
 - ✅ Comments on posts (backend + frontend, with comment counts)
 - ✅ Hashtag search endpoint (server-side filtering)
 - ✅ Event categories with picker and filter

@@ -40,6 +40,7 @@ export const createTicket = async (req: Request, res: Response) => {
     // return event details rather than raw ticket to match front-end expectations
     const payload = {
       id: event.id,
+      ticketId: ticket.id,
       title: event.title,
       description: event.description,
       date: event.date,
@@ -89,6 +90,7 @@ export const getMyTickets = async (req: Request, res: Response) => {
       const ev = t.event;
       return {
         id: ev.id,
+        ticketId: t.id,
         title: ev.title,
         description: ev.description,
         date: ev.date,
@@ -138,10 +140,82 @@ export const deleteTicket = async (req: Request, res: Response) => {
   }
 };
 
+// Validate and mark ticket as used (organisation only)
+export const validateTicket = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const role = req.user?.role;
+
+    if (!userId || role?.toUpperCase() !== "ORGANISATION") {
+      return res.status(403).json({ message: "Forbidden - Organisation access required" });
+    }
+
+    const { ticketId } = req.body;
+    if (!ticketId) {
+      return res.status(400).json({ message: "Missing ticketId" });
+    }
+
+    // Find the ticket with event and student info
+    const ticket = await prisma.ticket.findUnique({
+      where: { id: ticketId },
+      include: {
+        event: {
+          include: { organiser: { select: { id: true } } },
+        },
+        student: { select: { id: true, name: true, email: true } },
+      },
+    });
+
+    if (!ticket) {
+      return res.status(404).json({ message: "Ticket not found" });
+    }
+
+    // Verify this organisation owns the event
+    if (ticket.event.organiserId !== userId) {
+      return res.status(403).json({ message: "This ticket is not for your event" });
+    }
+
+    // Check if already used
+    if (ticket.used) {
+      return res.status(400).json({
+        message: "Ticket already used",
+        ticket: {
+          id: ticket.id,
+          used: true,
+          usedAt: ticket.usedAt,
+          event: { title: ticket.event.title, date: ticket.event.date },
+          student: ticket.student,
+        },
+      });
+    }
+
+    // Mark as used
+    const updated = await prisma.ticket.update({
+      where: { id: ticketId },
+      data: { used: true, usedAt: new Date() },
+    });
+
+    return res.json({
+      success: true,
+      ticket: {
+        id: updated.id,
+        used: updated.used,
+        usedAt: updated.usedAt,
+        event: { title: ticket.event.title, date: ticket.event.date, location: ticket.event.location },
+        student: ticket.student,
+      },
+    });
+  } catch (error) {
+    console.error("Error validating ticket:", error);
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
+
 const ticketsController = {
   createTicket,
   getMyTickets,
   deleteTicket,
+  validateTicket,
 };
 
 export default ticketsController;

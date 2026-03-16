@@ -9,6 +9,7 @@ export default function OrganisationsLayout() {
   const activeTab = useMemo(() => {
     if (pathname.includes("eventsOrg")) return "myEvents";
     if (pathname.includes("createEvent")) return "createEvent";
+    if (pathname.includes("scanTickets")) return "scan";
     if (pathname.includes("socialOrg")) return "social";
     return null;
   }, [pathname]);
@@ -16,6 +17,7 @@ export default function OrganisationsLayout() {
   const routeForTab = (tab: string) => {
     if (tab === "myEvents") return "/Organisations/eventsOrg";
     if (tab === "createEvent") return "/Organisations/createEvent";
+    if (tab === "scan") return "/Organisations/scanTickets";
     if (tab === "social") return "/Organisations/socialOrg";
     return "/Organisations/eventsOrg";
   };
@@ -40,6 +42,7 @@ export default function OrganisationsLayout() {
     >
       <Tabs.Screen name="eventsOrg" options={{ href: null }} />
       <Tabs.Screen name="createEvent" options={{ href: null }} />
+      <Tabs.Screen name="scanTickets" options={{ href: null }} />
       <Tabs.Screen name="socialOrg" options={{ href: null }} />
       <Tabs.Screen name="profileOrg" options={{ href: null }} />
       <Tabs.Screen name="profileStudent" options={{ href: null }} />

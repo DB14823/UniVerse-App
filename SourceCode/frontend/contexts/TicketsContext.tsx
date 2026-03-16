@@ -3,6 +3,7 @@ import * as SecureStore from "expo-secure-store";
 
 export interface Ticket {
   id: string;
+  ticketId: string;
   day: string;
   title: string;
   dateLabel: string;
@@ -35,6 +36,7 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
           const remote = await server.getMyTickets();
           const mapped: Ticket[] = remote.map((t) => ({
             id: t.id,
+            ticketId: t.ticketId,
             day: new Date(t.date).toLocaleDateString("en-US", { weekday: "long" }),
             title: t.title,
             dateLabel: new Date(t.date).toLocaleString(),
@@ -100,6 +102,7 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
       const remote = await getMyTickets();
       const mapped: Ticket[] = remote.map((t) => ({
         id: t.id,
+        ticketId: t.ticketId,
         day: new Date(t.date).toLocaleDateString("en-US", { weekday: "long" }),
         title: t.title,
         dateLabel: new Date(t.date).toLocaleString(),
