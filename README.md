@@ -15,6 +15,9 @@ A mobile social networking application built with React Native and Expo, allowin
 - **Event Feed**: Browse upcoming events
 - **My Tickets**: Track event tickets
 - **Real-time Updates**: Posts automatically sync with the database
+- **Follow System**: Follow/unfollow students and organisations, view follower/following counts
+- **In-App Notifications**: Notification center for likes, comments, ticket confirmations, and new events from followed organisations
+- **Notification Settings**: Toggle notifications on/off with persistent settings
 
 ## 🛠️ Tech Stack
 
@@ -156,6 +159,32 @@ comp2003-2025-2026-team-21/
 - `createdAt`: DateTime
 - User relationship (many-to-one)
 
+### Follow
+- `id`: UUID (primary key)
+- `followerId`: String (who is following)
+- `followerType`: String (STUDENT or ORGANISATION)
+- `followingId`: String (who is being followed)
+- `followingType`: String (STUDENT or ORGANISATION)
+- `createdAt`: DateTime
+
+### Notification
+- `id`: UUID (primary key)
+- `type`: String (POST_LIKE, POST_COMMENT, TICKET_CONFIRMED, NEW_EVENT)
+- `title`: String
+- `body`: String
+- `data`: JSON (optional payload with postId, eventId, etc.)
+- `read`: Boolean
+- `userId`: String
+- `userRole`: String
+- `createdAt`: DateTime
+
+### PushToken
+- `id`: UUID (primary key)
+- `token`: String (unique, Expo push token)
+- `userId`: String
+- `userRole`: String
+- `createdAt`: DateTime
+
 ## 🔐 Authentication
 
 The app uses JWT-based authentication:
@@ -177,6 +206,24 @@ The app uses JWT-based authentication:
 - `GET /posts` - Get all posts with author information
 - `GET /posts/user/:userId` - Get posts by specific user
 - `DELETE /posts/:postId` - Delete a post (requires auth)
+
+### Follow
+- `POST /follow/:targetId` - Follow a user or organisation
+- `DELETE /follow/:targetId` - Unfollow a user or organisation
+- `GET /follow/check/:targetId` - Check if current user is following target
+- `GET /follow/counts/:userId` - Get follower and following counts
+- `GET /follow/followers/:userId` - Get list of followers
+- `GET /follow/following/:userId` - Get list of following
+
+### Notifications
+- `POST /notifications/register-token` - Register push notification token
+- `DELETE /notifications/register-token` - Unregister push token
+- `GET /notifications` - Get user's notifications
+- `PATCH /notifications/:id/read` - Mark notification as read
+- `PATCH /notifications/read-all` - Mark all notifications as read
+- `DELETE /notifications/:id` - Delete a notification
+- `GET /notifications/settings` - Get notification preferences
+- `PUT /notifications/settings` - Update notification preferences
 
 ## 🧪 Development Tools
 

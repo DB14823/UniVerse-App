@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import prisma from "../utils/prisma";
 import { uploadImage, deleteImage, extractPublicIdFromUrl } from "../services/imageUpload";
+import { notifyFollowersOfNewEvent } from "../services/notifications";
 
 const isValidDate = (value: string) => {
   const parsed = new Date(value);
@@ -76,6 +77,11 @@ export const createEvent = async (req: Request, res: Response) => {
         location: event.organiser.location,
       },
     };
+
+    // Notify followers of the new event (async, don't block response)
+    notifyFollowersOfNewEvent(userId, event.organiser.name, event.id, title).catch((err) => {
+      console.error("Error notifying followers:", err);
+    });
 
     return res.status(201).json({ event: eventWithUrl });
   } catch (error) {

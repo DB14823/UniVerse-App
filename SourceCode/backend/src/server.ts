@@ -5,6 +5,8 @@ import authRoutes from "./routes/auth";
 import postsRoutes from "./routes/posts";
 import ticketsRoutes from "./routes/tickets";
 import eventsRoutes from "./routes/events";
+import followRoutes from "./routes/follow";
+import notificationsRoutes from "./routes/notifications";
 import { globalErrorHandler, notFoundHandler } from "./middleware/errorHandler";
 
 /**
@@ -53,6 +55,16 @@ app.use("/tickets", ticketsRoutes);
  *  POST /events
  */
 app.use("/events", eventsRoutes);
+
+/**
+ * Mount follow routes under /follow
+ */
+app.use("/follow", followRoutes);
+
+/**
+ * Mount notifications routes under /notifications
+ */
+app.use("/notifications", notificationsRoutes);
 
 /**
  * Simple health check endpoint.

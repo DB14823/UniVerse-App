@@ -15,6 +15,7 @@ model Student {
   name                 String?
   createdAt            DateTime @default(now())
   profileImageUrl      String?
+  notificationsEnabled Boolean  @default(true)
   posts                Posts[]
   tickets              Ticket[]
 }
@@ -28,6 +29,7 @@ model Organisation {
   createdAt            DateTime @default(now())
   profileImageUrl      String?
   evidenceImageUrl     String?
+  notificationsEnabled Boolean  @default(true)
   events               Event[]
   posts                Posts[]
 }
@@ -99,4 +101,42 @@ model Ticket {
   @@unique([studentId, eventId])
   @@index([eventId])
   @@index([studentId])
+}
+
+model Follow {
+  id            String   @id @default(uuid())
+  followerId    String
+  followerType  String   // "STUDENT" or "ORGANISATION"
+  followingId   String
+  followingType String   // "STUDENT" or "ORGANISATION"
+  createdAt     DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+model PushToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  userRole  String   // "STUDENT" or "ORGANISATION"
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  type      String   // "POST_LIKE", "POST_COMMENT", "TICKET_CONFIRMED", "NEW_EVENT"
+  title     String
+  body      String
+  data      Json?    // Additional payload (eventId, postId, etc.)
+  read      Boolean  @default(false)
+  userId    String
+  userRole  String   // "STUDENT" or "ORGANISATION"
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
 }

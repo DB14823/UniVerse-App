@@ -7,12 +7,14 @@ import {
   RefreshControl,
   TouchableOpacity,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { Ionicons } from "@expo/vector-icons";
 import { getUserPosts, getCurrentUser, getUserProfile, Post } from "../../lib/postsApi";
+import { followUser, unfollowUser, checkFollowing, getFollowCounts } from "../../lib/followApi";
 import { colours } from "../../lib/theme/colours";
 import { shadows } from "../../lib/theme/colours";
 
@@ -31,6 +33,10 @@ export default function ProfileStudent() {
   const [userPosts, setUserPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [profileImageUri, setProfileImageUri] = useState<string | null>(null);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
 
   const totalLikes = useMemo(
     () => userPosts.reduce((sum, post) => sum + (post.likeCount ?? 0), 0),
@@ -102,6 +108,19 @@ export default function ProfileStudent() {
         const posts = await getUserPosts(finalUserId);
         setUserPosts(posts);
 
+        // Load follow data
+        try {
+          const [counts, followingStatus] = await Promise.all([
+            getFollowCounts(finalUserId),
+            viewingOther ? checkFollowing(finalUserId) : Promise.resolve(false),
+          ]);
+          setFollowersCount(counts.followersCount);
+          setFollowingCount(counts.followingCount);
+          setIsFollowing(followingStatus);
+        } catch (err) {
+          console.error("Error loading follow data:", err);
+        }
+
         if (!finalUsername && posts.length > 0 && posts[0]?.User?.username) {
           finalUsername = posts[0].User.username;
         }
@@ -120,6 +139,27 @@ export default function ProfileStudent() {
     await loadUserProfile(routeUserId, routeUsername);
     setRefreshing(false);
   }, [routeUserId, routeUsername]);
+
+  const handleFollowPress = useCallback(async () => {
+    if (!userId || followLoading) return;
+
+    try {
+      setFollowLoading(true);
+      if (isFollowing) {
+        await unfollowUser(userId);
+        setIsFollowing(false);
+        setFollowersCount((prev) => Math.max(0, prev - 1));
+      } else {
+        await followUser(userId);
+        setIsFollowing(true);
+        setFollowersCount((prev) => prev + 1);
+      }
+    } catch (error) {
+      console.error("Error toggling follow:", error);
+    } finally {
+      setFollowLoading(false);
+    }
+  }, [userId, isFollowing, followLoading]);
 
   const bottomPad = 110 + Math.max(insets.bottom, 0);
 
@@ -175,11 +215,49 @@ export default function ProfileStudent() {
             <Text style={styles.statLabel}>Likes</Text>
           </View>
           <View style={styles.statCard}>
+            <Ionicons name="people" size={20} color={colours.primary} />
+            <Text style={styles.statNumber}>{followersCount}</Text>
+            <Text style={styles.statLabel}>Followers</Text>
+          </View>
+          <View style={styles.statCard}>
             <Ionicons name="grid" size={20} color={colours.secondary} />
             <Text style={styles.statNumber}>{userPosts.length}</Text>
             <Text style={styles.statLabel}>Posts</Text>
           </View>
         </View>
+
+        {viewingOther && userId && (
+          <TouchableOpacity
+            style={[
+              styles.followBtn,
+              isFollowing ? styles.followingBtn : null,
+            ]}
+            onPress={handleFollowPress}
+            disabled={followLoading}
+            activeOpacity={0.85}
+          >
+            {followLoading ? (
+              <ActivityIndicator size="small" color={colours.textPrimary} />
+            ) : (
+              <>
+                <Ionicons
+                  name={isFollowing ? "checkmark" : "add"}
+                  size={18}
+                  color={isFollowing ? colours.textSecondary : colours.textPrimary}
+                  style={{ marginRight: 6 }}
+                />
+                <Text
+                  style={[
+                    styles.followBtnText,
+                    isFollowing ? styles.followingBtnText : null,
+                  ]}
+                >
+                  {isFollowing ? "Following" : "Follow"}
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
 
         {loading ? (
           <Text style={styles.loadingText}>Loading posts...</Text>
@@ -363,5 +441,33 @@ const styles = StyleSheet.create({
     color: colours.textMuted,
     fontSize: 16,
     marginTop: 20,
+  },
+
+  followBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 999,
+    backgroundColor: colours.primary,
+    marginHorizontal: 16,
+    marginBottom: 16,
+  },
+
+  followingBtn: {
+    backgroundColor: colours.glass,
+    borderWidth: 1,
+    borderColor: colours.border,
+  },
+
+  followBtnText: {
+    color: colours.textPrimary,
+    fontSize: 16,
+    fontWeight: "800",
+  },
+
+  followingBtnText: {
+    color: colours.textSecondary,
   },
 });

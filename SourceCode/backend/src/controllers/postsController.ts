@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import prisma from "../utils/prisma";
 import { uploadImage, deleteImage, extractPublicIdFromUrl } from "../services/imageUpload";
+import { sendNotificationToUser } from "../services/notifications";
 
 const buildPostUser = (post: {
   student: {
@@ -449,6 +450,50 @@ export const updatePostLikes = async (req: Request, res: Response) => {
         },
       });
       likedByMe = true;
+
+      // Send notification to post author (only on like, not unlike)
+      try {
+        const post = await prisma.posts.findUnique({
+          where: { id: postId },
+          select: {
+            studentId: true,
+            organisationId: true,
+          },
+        });
+
+        if (post) {
+          const authorId = post.studentId || post.organisationId;
+          const authorRole = post.studentId ? "STUDENT" : "ORGANISATION";
+
+          // Don't notify if user likes their own post
+          if (authorId && authorId !== userId) {
+            // Get the liker's info for the notification
+            const liker = await prisma.student.findUnique({
+              where: { id: userId },
+              select: { username: true, name: true },
+            });
+
+            const likerOrg = liker ? null : await prisma.organisation.findUnique({
+              where: { id: userId },
+              select: { name: true },
+            });
+
+            const likerName = liker?.username || liker?.name || likerOrg?.name || "Someone";
+
+            await sendNotificationToUser(
+              authorId,
+              authorRole,
+              "POST_LIKE",
+              `${likerName} liked your post`,
+              "Your post received a new like!",
+              { postId }
+            );
+          }
+        }
+      } catch (notifError) {
+        // Don't fail the request if notification fails
+        console.error("Error sending like notification:", notifError);
+      }
     }
 
     const likeCount = await prisma.like.count({
@@ -657,6 +702,38 @@ export const createComment = async (req: Request, res: Response) => {
     });
 
     const author = await buildCommentUser(userId);
+
+    // Send notification to post author
+    try {
+      const authorId = post.studentId || post.organisationId;
+      const authorRole = post.studentId ? "STUDENT" : "ORGANISATION";
+
+      // Don't notify if user comments on their own post
+      if (authorId && authorId !== userId) {
+        const commenter = await prisma.student.findUnique({
+          where: { id: userId },
+          select: { username: true, name: true },
+        });
+
+        const commenterOrg = commenter ? null : await prisma.organisation.findUnique({
+          where: { id: userId },
+          select: { name: true },
+        });
+
+        const commenterName = commenter?.username || commenter?.name || commenterOrg?.name || "Someone";
+
+        await sendNotificationToUser(
+          authorId,
+          authorRole,
+          "POST_COMMENT",
+          `${commenterName} commented on your post`,
+          content.trim().substring(0, 100),
+          { postId, commentId: comment.id }
+        );
+      }
+    } catch (notifError) {
+      console.error("Error sending comment notification:", notifError);
+    }
 
     return res.status(201).json({
       message: "Comment created successfully",

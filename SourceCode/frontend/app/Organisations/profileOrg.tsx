@@ -10,6 +10,7 @@ import {
   Modal,
   Pressable,
   Linking,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -18,6 +19,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { getUserPosts, getCurrentUser, getUserProfile, Post } from "../../lib/postsApi";
 import { EventRecord, getEventsByOrganiser } from "../../lib/eventsApi";
 import { getStaticMapUrl } from "../../lib/staticMaps";
+import { followUser, unfollowUser, checkFollowing, getFollowCounts } from "../../lib/followApi";
 import { colours } from "../../lib/theme/colours";
 import { shadows } from "../../lib/theme/colours";
 
@@ -45,6 +47,10 @@ export default function ProfileOrg() {
   const [activeTab, setActiveTab] = useState<"posts" | "events">("posts");
   const [selectedEvent, setSelectedEvent] = useState<EventRecord | null>(null);
   const [modalMapUrl, setModalMapUrl] = useState<string | null>(null);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
 
   const totalLikes = useMemo(
     () => orgPosts.reduce((sum, post) => sum + (post.likeCount ?? 0), 0),
@@ -198,6 +204,22 @@ export default function ProfileOrg() {
         setOrgPosts(posts);
         setOrgEvents(events);
 
+        // Load follow data (only for viewing other profiles)
+        const isViewingOther = routeUserId && routeUserId !== currentUserId;
+        if (isViewingOther) {
+          try {
+            const [counts, followingStatus] = await Promise.all([
+              getFollowCounts(finalUserId),
+              checkFollowing(finalUserId),
+            ]);
+            setFollowersCount(counts.followersCount);
+            setFollowingCount(counts.followingCount);
+            setIsFollowing(followingStatus);
+          } catch (err) {
+            console.error("Error loading follow data:", err);
+          }
+        }
+
         if (!finalOrgName && posts.length > 0) {
           const fromPostName = posts[0]?.User?.name;
           const fromPostUsername = posts[0]?.User?.username;
@@ -231,6 +253,30 @@ export default function ProfileOrg() {
     await loadOrgProfile(routeUserId, routeUsername);
     setRefreshing(false);
   }, [routeUserId, routeUsername]);
+
+  const handleFollowPress = useCallback(async () => {
+    if (!userId || followLoading) return;
+
+    try {
+      setFollowLoading(true);
+      if (isFollowing) {
+        await unfollowUser(userId);
+        setIsFollowing(false);
+        setFollowersCount((prev) => Math.max(0, prev - 1));
+      } else {
+        await followUser(userId);
+        setIsFollowing(true);
+        setFollowersCount((prev) => prev + 1);
+      }
+    } catch (error) {
+      console.error("Error toggling follow:", error);
+    } finally {
+      setFollowLoading(false);
+    }
+  }, [userId, isFollowing, followLoading]);
+
+  // Check if viewing another profile (not own)
+  const isViewingOther = routeUserId && currentUserId && routeUserId !== currentUserId;
 
   const bottomPad = 110 + Math.max(insets.bottom, 0);
 
@@ -297,11 +343,49 @@ export default function ProfileOrg() {
             <Text style={styles.statLabel}>Likes</Text>
           </View>
           <View style={styles.statCard}>
+            <Ionicons name="people" size={20} color={colours.primary} />
+            <Text style={styles.statNumber}>{followersCount}</Text>
+            <Text style={styles.statLabel}>Followers</Text>
+          </View>
+          <View style={styles.statCard}>
             <Ionicons name="grid" size={20} color={colours.secondary} />
             <Text style={styles.statNumber}>{orgPosts.length}</Text>
             <Text style={styles.statLabel}>Posts</Text>
           </View>
         </View>
+
+        {isViewingOther && userId && (
+          <TouchableOpacity
+            style={[
+              styles.followBtn,
+              isFollowing ? styles.followingBtn : null,
+            ]}
+            onPress={handleFollowPress}
+            disabled={followLoading}
+            activeOpacity={0.85}
+          >
+            {followLoading ? (
+              <ActivityIndicator size="small" color={colours.textPrimary} />
+            ) : (
+              <>
+                <Ionicons
+                  name={isFollowing ? "checkmark" : "add"}
+                  size={18}
+                  color={isFollowing ? colours.textSecondary : colours.textPrimary}
+                  style={{ marginRight: 6 }}
+                />
+                <Text
+                  style={[
+                    styles.followBtnText,
+                    isFollowing ? styles.followingBtnText : null,
+                  ]}
+                >
+                  {isFollowing ? "Following" : "Follow"}
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
 
         <View style={styles.tabRow}>
           <TouchableOpacity
@@ -366,7 +450,7 @@ export default function ProfileOrg() {
           </>
         ) : (
           <>
-            <Text style={styles.postsLabel}>Events: {orgEvents.length}</Text>
+            <Text style={styles.eventCountLabel}>Events: {orgEvents.length}</Text>
 
             {loadingEvents ? (
               <Text style={styles.loadingText}>Loading events...</Text>
@@ -778,5 +862,41 @@ const styles = StyleSheet.create({
     color: colours.textMuted,
     fontSize: 16,
     marginTop: 20,
+  },
+
+  eventCountLabel: {
+    color: colours.textSecondary,
+    fontSize: 14,
+    fontWeight: "700",
+    marginBottom: 10,
+    marginLeft: 4,
+  },
+
+  followBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 999,
+    backgroundColor: colours.primary,
+    marginHorizontal: 16,
+    marginBottom: 16,
+  },
+
+  followingBtn: {
+    backgroundColor: colours.glass,
+    borderWidth: 1,
+    borderColor: colours.border,
+  },
+
+  followBtnText: {
+    color: colours.textPrimary,
+    fontSize: 16,
+    fontWeight: "800",
+  },
+
+  followingBtnText: {
+    color: colours.textSecondary,
   },
 });

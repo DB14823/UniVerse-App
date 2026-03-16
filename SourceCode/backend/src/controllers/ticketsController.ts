@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../utils/prisma";
+import { sendNotificationToUser } from "../services/notifications";
 
 // create a ticket for an event (student only)
 export const createTicket = async (req: Request, res: Response) => {
@@ -36,6 +37,20 @@ export const createTicket = async (req: Request, res: Response) => {
         eventId,
       },
     });
+
+    // Send ticket confirmation notification
+    try {
+      await sendNotificationToUser(
+        userId,
+        "STUDENT",
+        "TICKET_CONFIRMED",
+        "Ticket Confirmed!",
+        `Your ticket for "${event.title}" has been booked.`,
+        { eventId, ticketId: ticket.id }
+      );
+    } catch (notifError) {
+      console.error("Error sending ticket notification:", notifError);
+    }
 
     // return event details rather than raw ticket to match front-end expectations
     const payload = {
