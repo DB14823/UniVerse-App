@@ -24,6 +24,7 @@ export const createEvent = async (req: Request, res: Response) => {
       price,
       eventImage,
       category,
+      capacity,
     } = req.body;
 
     if (!title || !date || !location || !price) {
@@ -46,6 +47,9 @@ export const createEvent = async (req: Request, res: Response) => {
 
     const safeDescription = typeof description === "string" ? description : "";
     const safeCategory = typeof category === "string" ? category : "Other";
+    const safeCapacity = capacity !== undefined && capacity !== null && capacity !== ''
+      ? parseInt(String(capacity), 10)
+      : null;
 
     const event = await prisma.event.create({
       data: {
@@ -55,6 +59,7 @@ export const createEvent = async (req: Request, res: Response) => {
         location,
         price,
         category: safeCategory,
+        capacity: safeCapacity,
         organiserId: userId,
         eventImageUrl,
       },
@@ -110,11 +115,15 @@ export const getAllEvents = async (req: Request, res: Response) => {
             location: true,
           },
         },
+        _count: {
+          select: { tickets: true },
+        },
       },
     });
 
     const eventsWithUrl = events.map((event) => ({
       ...event,
+      ticketCount: event._count.tickets,
       organiser: {
         id: event.organiser.id,
         name: event.organiser.name,
@@ -148,11 +157,15 @@ export const getEventsByOrganiser = async (req: Request, res: Response) => {
             location: true,
           },
         },
+        _count: {
+          select: { tickets: true },
+        },
       },
     });
 
     const eventsWithUrl = events.map((event) => ({
       ...event,
+      ticketCount: event._count.tickets,
       organiser: {
         id: event.organiser.id,
         name: event.organiser.name,
@@ -236,6 +249,7 @@ export const updateEvent = async (req: Request, res: Response) => {
       price,
       eventImage,
       category,
+      capacity,
     } = req.body;
 
     if (date && !isValidDate(date)) {
@@ -250,6 +264,11 @@ export const updateEvent = async (req: Request, res: Response) => {
     if (location !== undefined) data.location = location;
     if (price !== undefined) data.price = price;
     if (category !== undefined) data.category = category;
+    if (capacity !== undefined) {
+      data.capacity = capacity !== null && capacity !== ''
+        ? parseInt(String(capacity), 10)
+        : null;
+    }
 
     if (eventImage === null) {
       // Delete image

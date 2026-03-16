@@ -17,6 +17,7 @@ interface EventCardProps {
   price: string;
   eventImageUrl?: string | null;
   ticketCount?: number;
+  capacity?: number | null;
   onPress: (eventId: string) => void;
 }
 
@@ -28,6 +29,7 @@ export default function EventCard({
   price,
   eventImageUrl,
   ticketCount,
+  capacity,
   onPress,
 }: EventCardProps) {
   const handlePress = () => {
@@ -68,11 +70,15 @@ export default function EventCard({
           <Text style={styles.eventMetaRight} numberOfLines={1}>
             {price}
           </Text>
-          {ticketCount !== undefined && (
+          {capacity !== null && capacity !== undefined ? (
+            <Text style={styles.ticketCount} numberOfLines={1}>
+              {ticketCount ?? 0}/{capacity} tickets
+            </Text>
+          ) : ticketCount !== undefined ? (
             <Text style={styles.ticketCount} numberOfLines={1}>
               {ticketCount} {ticketCount === 1 ? 'ticket' : 'tickets'}
             </Text>
-          )}
+          ) : null}
         </View>
       </View>
     </Pressable>

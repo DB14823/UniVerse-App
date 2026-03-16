@@ -46,6 +46,7 @@ export default function AddEventOrg() {
   const [price, setPrice] = useState("£");
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [category, setCategory] = useState<string>("Other");
+  const [capacity, setCapacity] = useState("");
 
   const bottomPad = 110 + Math.max(insets.bottom, 0);
 
@@ -172,6 +173,7 @@ export default function AddEventOrg() {
         location: location.trim(),
         price: priceNumber,
         category,
+        capacity: capacity ? parseInt(capacity, 10) : null,
         imageUri,
       });
 
@@ -187,6 +189,7 @@ export default function AddEventOrg() {
       setPrice("£");
       setImageUri(null);
       setCategory("Other");
+      setCapacity("");
     } catch (error: any) {
       if (error instanceof AuthError) {
         // token expired or other auth problem
@@ -362,6 +365,13 @@ export default function AddEventOrg() {
                 onBlur={() => setPrice(normalizePrice(price))}
                 placeholder="e.g. £10.00"
                 keyboardType="decimal-pad"
+              />
+              <TInput
+                label="Ticket Capacity (optional)"
+                value={capacity}
+                onChangeText={setCapacity}
+                placeholder="Leave empty for unlimited"
+                keyboardType="numeric"
               />
             </View>
           </View>

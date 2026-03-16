@@ -17,6 +17,7 @@
 
 ## Recently Completed
 
+- ✅ Event ticket capacity feature (organisers can set max tickets, students see remaining/fully booked)
 - ✅ Stripe PaymentSheet integration for paid events
 - ✅ Push notifications infrastructure (backend + frontend stubs)
 - ✅ Follow system for users and organisations

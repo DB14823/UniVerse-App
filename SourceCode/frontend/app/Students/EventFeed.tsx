@@ -55,6 +55,8 @@ type EventItem = {
   eventImageUrl: string | null;
   mapLocation: string;
   date: Date;
+  capacity?: number | null;
+  ticketCount?: number;
 };
 
 export default function EventFeed() {
@@ -145,6 +147,8 @@ export default function EventFeed() {
           eventImageUrl: event.eventImageUrl,
           mapLocation: event.organiser.location ?? event.location,
           date: eventDate,
+          capacity: event.capacity,
+          ticketCount: event.ticketCount,
         };
       }),
     [events]
@@ -252,6 +256,11 @@ export default function EventFeed() {
           <Text style={styles.eventMetaRight} numberOfLines={1}>
             {ev.price}
           </Text>
+          {ev.capacity !== null && ev.capacity !== undefined && (
+            <Text style={styles.capacityText} numberOfLines={1}>
+              {ev.ticketCount ?? 0}/{ev.capacity} tickets
+            </Text>
+          )}
         </View>
       </View>
     </Pressable>
@@ -335,6 +344,11 @@ export default function EventFeed() {
             ) : null}
             <Text style={styles.modalMeta}>{selectedEvent?.location}</Text>
             <Text style={styles.modalMeta}>{selectedEvent?.price}</Text>
+            {selectedEvent?.capacity !== null && selectedEvent?.capacity !== undefined && (
+              <Text style={styles.modalMeta}>
+                {(selectedEvent.ticketCount ?? 0)}/{selectedEvent.capacity} tickets booked
+              </Text>
+            )}
 
             <View style={styles.mapFrame}>
   {modalMapUrl ? (
@@ -357,10 +371,36 @@ export default function EventFeed() {
 
                 {/* booking button */}
                 <TouchableOpacity
-                  style={[styles.openMapBtn, { marginTop: 8, backgroundColor: colours.primary }]}
-                  disabled={isProcessingPayment}
+                  style={[
+                    styles.openMapBtn,
+                    {
+                      marginTop: 8,
+                      backgroundColor: selectedEvent?.capacity !== null &&
+                        selectedEvent?.capacity !== undefined &&
+                        (selectedEvent.ticketCount ?? 0) >= selectedEvent.capacity
+                        ? colours.textMuted
+                        : colours.primary,
+                    },
+                  ]}
+                  disabled={
+                    isProcessingPayment ||
+                    (selectedEvent?.capacity !== null &&
+                      selectedEvent?.capacity !== undefined &&
+                      (selectedEvent.ticketCount ?? 0) >= selectedEvent.capacity)
+                  }
                   onPress={async () => {
                     if (!selectedEvent || isProcessingPayment) return;
+
+                    // Check if fully booked
+                    if (
+                      selectedEvent.capacity !== null &&
+                      selectedEvent.capacity !== undefined &&
+                      (selectedEvent.ticketCount ?? 0) >= selectedEvent.capacity
+                    ) {
+                      Alert.alert("Fully booked", "This event has reached its ticket capacity.");
+                      return;
+                    }
+
                     const already = tickets.find((t) => t.id === selectedEvent.id);
                     if (already) {
                       Alert.alert("Already booked", "You already have a ticket for this event.");
@@ -461,7 +501,13 @@ export default function EventFeed() {
                   {isProcessingPayment ? (
                     <ActivityIndicator color="#fff" />
                   ) : (
-                    <Text style={[styles.openMapText, { color: "#fff" }]}>Book ticket</Text>
+                    <Text style={[styles.openMapText, { color: "#fff" }]}>
+                      {selectedEvent?.capacity !== null &&
+                        selectedEvent?.capacity !== undefined &&
+                        (selectedEvent.ticketCount ?? 0) >= selectedEvent.capacity
+                        ? "Fully booked"
+                        : "Book ticket"}
+                    </Text>
                   )}
                 </TouchableOpacity>
               </>
@@ -585,6 +631,12 @@ const styles = StyleSheet.create({
     color: colours.textPrimary,
     fontSize: 14,
     fontWeight: "800",
+  },
+
+  capacityText: {
+    color: colours.textMuted,
+    fontSize: 12,
+    marginTop: 4,
   },
 
   modalBackdrop: {

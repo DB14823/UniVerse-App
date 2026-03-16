@@ -19,9 +19,19 @@ export const createTicket = async (req: Request, res: Response) => {
     }
 
     // ensure event exists
-    const event = await prisma.event.findUnique({ where: { id: eventId } });
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+      include: {
+        _count: { select: { tickets: true } },
+      },
+    });
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
+    }
+
+    // Check capacity
+    if (event.capacity !== null && event._count.tickets >= event.capacity) {
+      return res.status(400).json({ message: "Event is fully booked" });
     }
 
     // Parse price

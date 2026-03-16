@@ -12,8 +12,9 @@ A mobile social networking application built with React Native and Expo, allowin
 - **Social Feed**: View posts from all students in chronological order
 - **Create Posts**: Share images with captions using camera or photo library
 - **Profile Management**: View and edit student profiles
-- **Event Feed**: Browse upcoming events
+- **Event Feed**: Browse upcoming events with capacity tracking
 - **My Tickets**: Track event tickets
+- **Event Capacity**: Organisers can set ticket limits; students see remaining spots and "fully booked" status
 - **Real-time Updates**: Posts automatically sync with the database
 - **Follow System**: Follow/unfollow students and organisations, view follower/following counts
 - **In-App Notifications**: Notification center for likes, comments, ticket confirmations, and new events from followed organisations
@@ -149,6 +150,19 @@ comp2003-2025-2026-team-21/
 - `password`: String (hashed)
 - `role`: Enum (STUDENT, SOCIETY_ORGANIZER)
 - Posts relationship (one-to-many)
+
+### Event
+- `id`: UUID (primary key)
+- `title`: String
+- `description`: String
+- `date`: DateTime
+- `location`: String
+- `price`: Decimal
+- `category`: String
+- `capacity`: Int? (optional, null = unlimited tickets)
+- `eventImageUrl`: String?
+- `organiserId`: String (foreign key to Organisation)
+- Tickets relationship (one-to-many)
 
 ### Posts
 - `id`: UUID (primary key)

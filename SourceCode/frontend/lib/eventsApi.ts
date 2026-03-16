@@ -64,6 +64,7 @@ export interface EventRecord {
   location: string;
   price: string | number; // Backend now returns Decimal as number
   category: string;
+  capacity?: number | null; // Maximum tickets available (null = unlimited)
   organiserId: string;
   createdAt: string;
   eventImageUrl: string | null;
@@ -116,6 +117,7 @@ export async function createEvent(params: {
   location: string;
   price: string | number; // Accept both string and number
   category?: string;
+  capacity?: number | null;
   imageUri?: string | null;
 }): Promise<EventRecord> {
   const token = await getAuthToken();
@@ -123,13 +125,14 @@ export async function createEvent(params: {
     throw new Error("Not authenticated");
   }
 
-  const payload: Record<string, string> = {
+  const payload: Record<string, string | number | null> = {
     title: params.title,
     description: params.description,
     date: params.date,
     location: params.location,
     price: String(params.price),
     category: params.category || "Other",
+    capacity: params.capacity ?? null,
   };
 
   if (params.imageUri) {
@@ -206,6 +209,7 @@ export async function updateEvent(params: {
   date?: string;
   location?: string;
   price?: string | number; // Accept both string and number
+  capacity?: number | null;
   imageUri?: string | null;
 }): Promise<EventRecord> {
   const token = await getAuthToken();
@@ -213,12 +217,13 @@ export async function updateEvent(params: {
     throw new Error("Not authenticated");
   }
 
-  const payload: Record<string, string | null> = {
-    title: params.title,
-    description: params.description,
-    date: params.date,
-    location: params.location,
+  const payload: Record<string, string | null | number> = {
+    title: params.title ?? null,
+    description: params.description ?? null,
+    date: params.date ?? null,
+    location: params.location ?? null,
     price: params.price != null ? String(params.price) : null,
+    capacity: params.capacity ?? null,
   };
 
   if (params.imageUri) {

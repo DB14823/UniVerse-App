@@ -46,6 +46,7 @@ type EventItem = {
   mapLocation: string;
   eventImageUrl: string | null;
   ticketCount: number;
+  capacity?: number | null;
   date: Date;
 };
 
@@ -197,6 +198,7 @@ export default function EventsOrg() {
           mapLocation: event.location,
           eventImageUrl: event.eventImageUrl,
           ticketCount: event.ticketCount ?? 0,
+          capacity: event.capacity,
           date: eventDate,
         };
       }),
@@ -293,6 +295,7 @@ export default function EventsOrg() {
         price={ev.price}
         eventImageUrl={ev.eventImageUrl}
         ticketCount={ev.ticketCount}
+        capacity={ev.capacity}
         onPress={handleEventPress}
       />
     );
@@ -604,7 +607,9 @@ export default function EventsOrg() {
                         <Text style={styles.modalMeta}>{selectedEvent?.location}</Text>
                         <Text style={styles.modalMeta}>{selectedEvent?.price}</Text>
                         <Text style={styles.modalMeta}>
-                          {selectedEvent?.ticketCount} {selectedEvent?.ticketCount === 1 ? 'ticket' : 'tickets'} booked
+                          {selectedEvent?.capacity !== null && selectedEvent?.capacity !== undefined
+                            ? `${selectedEvent.ticketCount}/${selectedEvent.capacity} tickets`
+                            : `${selectedEvent?.ticketCount} ${selectedEvent?.ticketCount === 1 ? 'ticket' : 'tickets'} booked`}
                         </Text>
                         {selectedEvent?.description ? (
                           <Text style={styles.modalMeta}>{selectedEvent.description}</Text>

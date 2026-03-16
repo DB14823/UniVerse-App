@@ -12,11 +12,12 @@ UniVerse is a university events management app where:
 
 ## 🔴 Critical / High Impact
 
-### 1. Event Attendance Tracking
-**Current gap:** Organisations can't see how many tickets have been booked for their events.
-- Add ticket count display on organisation's event cards
-- Show capacity/remaining spots on student event cards
-- Add "fully booked" state when events reach capacity
+### 1. Event Attendance Tracking ✅ COMPLETED
+- Added `capacity` field to Event model (null = unlimited)
+- Ticket count displayed on organisation's event cards
+- Students see capacity/remaining spots on event cards
+- "Fully booked" state prevents booking when capacity reached
+- Backend checks capacity before ticket creation
 
 ### 2. Event Description Field
 **Current gap:** `createEvent.tsx` has description in backend but no input field in frontend.
