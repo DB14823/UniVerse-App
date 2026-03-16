@@ -1,0 +1,20 @@
+{
+  "name": "universe",
+  "private": true,
+  "scripts": {
+    "env:init": "bash scripts/init-env.sh",
+    "install:all": "npm run env:init && cd SourceCode/frontend && npm install && cd ../backend && npm install",
+    "frontend": "cd SourceCode/frontend && npx expo start",
+    "frontend:tunnel": "cd SourceCode/frontend && npx expo start --tunnel",
+    "backend": "cd SourceCode/backend && npm run dev",
+    "dev:tunnel": "concurrently -n BACKEND,FRONTEND -c auto \"npm run backend\" \"npm run frontend:tunnel\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0",
+    "prisma": "5.14.0"
+  },
+  "dependencies": {
+    "expo-haptics": "^55.0.8",
+    "@prisma/client": "5.14.0"
+  }
+}
