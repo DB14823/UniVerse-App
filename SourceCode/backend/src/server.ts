@@ -7,6 +7,7 @@ import ticketsRoutes from "./routes/tickets";
 import eventsRoutes from "./routes/events";
 import followRoutes from "./routes/follow";
 import notificationsRoutes from "./routes/notifications";
+import paymentsRoutes from "./routes/payments";
 import { globalErrorHandler, notFoundHandler } from "./middleware/errorHandler";
 
 /**
@@ -65,6 +66,11 @@ app.use("/follow", followRoutes);
  * Mount notifications routes under /notifications
  */
 app.use("/notifications", notificationsRoutes);
+
+/**
+ * Mount payments routes under /payments
+ */
+app.use("/payments", paymentsRoutes);
 
 /**
  * Simple health check endpoint.

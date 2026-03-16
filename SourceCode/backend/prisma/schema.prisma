@@ -88,12 +88,13 @@ model Comment {
 }
 
 model Ticket {
-  id         String    @id @default(uuid())
-  eventId    String
-  studentId  String
-  createdAt  DateTime  @default(now())
-  used       Boolean   @default(false)
-  usedAt     DateTime?
+  id              String    @id @default(uuid())
+  eventId         String
+  studentId       String
+  paymentIntentId String?   // Stripe PaymentIntent ID for paid events
+  createdAt       DateTime  @default(now())
+  used            Boolean   @default(false)
+  usedAt          DateTime?
 
   event      Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
   student    Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)

@@ -11,6 +11,7 @@ import {
   Pressable,
   TouchableOpacity,
   Linking,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import FilterBar from "../components/FilterBar";
@@ -21,8 +22,14 @@ import { useTabRefresh } from "../hooks/useTabRefresh";
 import { getEvents, EventRecord } from "../../lib/eventsApi";
 import { getStaticMapUrl } from "../../lib/staticMaps";
 import { purchaseTicket } from "../../lib/ticketsApi";
+import { createPaymentIntent } from "../../lib/paymentsApi";
 import { useTickets, Ticket } from "../../contexts/TicketsContext";
 import { Alert } from "react-native";
+import {
+  useStripe,
+  initPaymentSheet,
+  presentPaymentSheet,
+} from "@stripe/stripe-react-native";
 
 const EVENT_CATEGORIES = [
   { label: "All Categories", value: "All" },
@@ -70,6 +77,8 @@ export default function EventFeed() {
     { label: "This Month", value: "This Month" },
   ]);
   const [categoryItems, setCategoryItems] = useState(EVENT_CATEGORIES);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const { handleNextAction } = useStripe();
 
   const fetchEvents = useCallback(async (category?: string) => {
     const data = await getEvents(category);
@@ -349,42 +358,111 @@ export default function EventFeed() {
                 {/* booking button */}
                 <TouchableOpacity
                   style={[styles.openMapBtn, { marginTop: 8, backgroundColor: colours.primary }]}
+                  disabled={isProcessingPayment}
                   onPress={async () => {
-                    if (!selectedEvent) return;
+                    if (!selectedEvent || isProcessingPayment) return;
                     const already = tickets.find((t) => t.id === selectedEvent.id);
                     if (already) {
                       Alert.alert("Already booked", "You already have a ticket for this event.");
                       return;
                     }
+
+                    // Parse price to determine if payment is needed
+                    const priceNum = parseFloat(selectedEvent.price.replace(/[^0-9.-]+/g, "")) || 0;
+
                     try {
-                      // call backend to create the ticket
-                      const response = await purchaseTicket(selectedEvent.id);
-                      // add to local cache for immediate UI update
-                      const ticket: Ticket = {
-                        id: selectedEvent.id,
-                        ticketId: response.ticketId,
-                        day: selectedEvent.date.toLocaleDateString("en-US", { weekday: "long" }),
-                        date: selectedEvent.date.toISOString(),
-                        title: selectedEvent.title,
-                        dateLabel: selectedEvent.date.toLocaleString(),
-                        dateLabelDate: selectedEvent.date.toLocaleDateString(),
-                        dateLabelTime: selectedEvent.date.toLocaleTimeString(),
-                        location: selectedEvent.location,
-                        price: selectedEvent.price,
-                        eventImageUrl: selectedEvent.eventImageUrl,
-                        mapLocation: selectedEvent.location,
-                        used: false,
-                        usedAt: null,
-                      };
-                      await addTicket(ticket);
-                      Alert.alert("Ticket added", "Your ticket is now available in My Tickets.");
-                      setSelectedEvent(null);
-                    } catch (error: any) {
-                      Alert.alert("Error", error.message || "Failed to book ticket.");
+                      setIsProcessingPayment(true);
+
+                      if (priceNum > 0) {
+                        // Paid event - need to process payment
+                        try {
+                          // 1. Create payment intent
+                          const { clientSecret, paymentIntentId } = await createPaymentIntent(selectedEvent.id);
+
+                          // 2. Initialize payment sheet
+                          const { error: initError } = await initPaymentSheet({
+                            merchantDisplayName: "UniVerse",
+                            paymentIntentClientSecret: clientSecret,
+                            // No Apple Pay or Google Pay as per requirements
+                          });
+
+                          if (initError) {
+                            Alert.alert("Payment Setup Error", initError.message || "Failed to initialize payment.");
+                            return;
+                          }
+
+                          // 3. Present payment sheet
+                          const { error: presentError } = await presentPaymentSheet();
+
+                          if (presentError) {
+                            if (presentError.code !== "Canceled") {
+                              Alert.alert("Payment Failed", presentError.message || "Payment was not completed.");
+                            }
+                            return;
+                          }
+
+                          // 4. Payment successful - create ticket with payment ID
+                          const response = await purchaseTicket(selectedEvent.id, paymentIntentId);
+
+                          const ticket: Ticket = {
+                            id: selectedEvent.id,
+                            ticketId: response.ticketId,
+                            day: selectedEvent.date.toLocaleDateString("en-US", { weekday: "long" }),
+                            date: selectedEvent.date.toISOString(),
+                            title: selectedEvent.title,
+                            dateLabel: selectedEvent.date.toLocaleString(),
+                            dateLabelDate: selectedEvent.date.toLocaleDateString(),
+                            dateLabelTime: selectedEvent.date.toLocaleTimeString(),
+                            location: selectedEvent.location,
+                            price: selectedEvent.price,
+                            eventImageUrl: selectedEvent.eventImageUrl,
+                            mapLocation: selectedEvent.location,
+                            used: false,
+                            usedAt: null,
+                          };
+                          await addTicket(ticket);
+                          Alert.alert("Payment Successful", "Your ticket has been booked and is now available in My Tickets.");
+                          setSelectedEvent(null);
+                        } catch (paymentError: any) {
+                          Alert.alert("Payment Error", paymentError.message || "Failed to process payment.");
+                        }
+                      } else {
+                        // Free event - direct booking
+                        try {
+                          const response = await purchaseTicket(selectedEvent.id);
+                          const ticket: Ticket = {
+                            id: selectedEvent.id,
+                            ticketId: response.ticketId,
+                            day: selectedEvent.date.toLocaleDateString("en-US", { weekday: "long" }),
+                            date: selectedEvent.date.toISOString(),
+                            title: selectedEvent.title,
+                            dateLabel: selectedEvent.date.toLocaleString(),
+                            dateLabelDate: selectedEvent.date.toLocaleDateString(),
+                            dateLabelTime: selectedEvent.date.toLocaleTimeString(),
+                            location: selectedEvent.location,
+                            price: selectedEvent.price,
+                            eventImageUrl: selectedEvent.eventImageUrl,
+                            mapLocation: selectedEvent.location,
+                            used: false,
+                            usedAt: null,
+                          };
+                          await addTicket(ticket);
+                          Alert.alert("Ticket added", "Your ticket is now available in My Tickets.");
+                          setSelectedEvent(null);
+                        } catch (error: any) {
+                          Alert.alert("Error", error.message || "Failed to book ticket.");
+                        }
+                      }
+                    } finally {
+                      setIsProcessingPayment(false);
                     }
                   }}
                 >
-                  <Text style={[styles.openMapText, { color: "#fff" }]}>Book ticket</Text>
+                  {isProcessingPayment ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={[styles.openMapText, { color: "#fff" }]}>Book ticket</Text>
+                  )}
                 </TouchableOpacity>
               </>
             )}

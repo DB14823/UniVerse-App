@@ -93,10 +93,15 @@ export async function getMyTickets(): Promise<TicketRecord[]> {
   return data.tickets as TicketRecord[];
 }
 
-export async function purchaseTicket(eventId: string): Promise<TicketRecord> {
+export async function purchaseTicket(eventId: string, paymentIntentId?: string): Promise<TicketRecord> {
   const token = await getAuthToken();
   if (!token) {
     throw new Error("Not authenticated");
+  }
+
+  const body: { eventId: string; paymentIntentId?: string } = { eventId };
+  if (paymentIntentId) {
+    body.paymentIntentId = paymentIntentId;
   }
 
   const data = await fetchWithAuth(`${API_URL}/tickets`, {
@@ -105,7 +110,7 @@ export async function purchaseTicket(eventId: string): Promise<TicketRecord> {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ eventId }),
+    body: JSON.stringify(body),
   });
 
   return data.ticket as TicketRecord;

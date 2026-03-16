@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import prisma from "../utils/prisma";
 import { sendNotificationToUser } from "../services/notifications";
+import { verifyPaymentIntent } from "../utils/stripe";
 
 // create a ticket for an event (student only)
 export const createTicket = async (req: Request, res: Response) => {
@@ -12,7 +13,7 @@ export const createTicket = async (req: Request, res: Response) => {
       return res.status(403).json({ message: "Forbidden" });
     }
 
-    const { eventId } = req.body;
+    const { eventId, paymentIntentId } = req.body;
     if (!eventId) {
       return res.status(400).json({ message: "Missing eventId" });
     }
@@ -21,6 +22,34 @@ export const createTicket = async (req: Request, res: Response) => {
     const event = await prisma.event.findUnique({ where: { id: eventId } });
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
+    }
+
+    // Parse price
+    const price =
+      typeof event.price === "number"
+        ? event.price
+        : parseFloat(String(event.price)) || 0;
+
+    // If event has a price, require payment verification
+    if (price > 0) {
+      if (!paymentIntentId) {
+        return res.status(400).json({
+          message: "Payment required for this event",
+          requiresPayment: true,
+          price: price,
+        });
+      }
+
+      // Verify the payment succeeded
+      const verification = await verifyPaymentIntent(paymentIntentId);
+      if (!verification.succeeded) {
+        return res.status(400).json({ message: "Payment has not been completed" });
+      }
+
+      // Verify the payment is for this event
+      if (verification.eventId !== eventId) {
+        return res.status(400).json({ message: "Payment is for a different event" });
+      }
     }
 
     // avoid duplicate tickets
@@ -35,6 +64,7 @@ export const createTicket = async (req: Request, res: Response) => {
       data: {
         studentId: userId,
         eventId,
+        paymentIntentId: price > 0 ? paymentIntentId : null,
       },
     });
 

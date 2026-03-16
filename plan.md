@@ -69,8 +69,17 @@ UniVerse is a university events management app where:
   - Event reminders (1 day before, 1 hour before)
   - Likes/comments on your posts
   - Ticket confirmation
+- **Note:** Push notifications require paid Apple Developer account
 
-### 9. See Who's Attending
+### 9. Stripe Payment Integration ✅ COMPLETED
+- Added Stripe SDK to frontend (`@stripe/stripe-react-native`)
+- Created backend payment intent endpoint (`/payments/create-intent`)
+- Modified ticket creation to verify payment for paid events
+- PaymentSheet UI for card payments (no Apple Pay/Google Pay)
+- Test card support: `4242 4242 4242 4242`
+- Added `paymentIntentId` to Ticket model for tracking
+
+### 10. See Who's Attending
 **Current gap:** Students can't see who else is going to an event.
 - Add attendee list to event detail modal
 - Allow students to see other attendees (privacy setting optional)
@@ -79,34 +88,34 @@ UniVerse is a university events management app where:
 
 ## 🟢 Nice to Have
 
-### 10. Follow System
-**Current gap:** No way to follow organisations or students.
-- Add Follow model to schema
+### 11. Follow System ✅ COMPLETED
+- Added Follow model to schema
+- Follow/unfollow organisations and students
 - Show followed organisations' events prominently
 - Show followed users' posts in a prioritised feed
 
-### 11. Calendar Integration
+### 12. Calendar Integration
 - Add "Add to Calendar" button on tickets
 - Export event to Apple/Google Calendar
 
-### 12. Event Sharing
+### 13. Event Sharing
 - Share event deep links
 - Share posts to other apps
 
-### 13. Password Reset
+### 14. Password Reset
 **Current gap:** No forgot password functionality.
 - Add password reset via email
 
-### 14. Organisation Verification Badge
+### 15. Organisation Verification Badge
 **Current gap:** Badge exists in UI but all organisations show it.
 - Only show verified badge after admin approval
 - Add admin verification workflow
 
-### 15. Event Map Improvements
+### 16. Event Map Improvements
 - Show multiple events on a single map view
 - Add "Events Near Me" feature with location
 
-### 16. Profile Enhancements
+### 17. Profile Enhancements
 - Add bio/description field
 - Show attended events count on student profiles
 - Show upcoming events count on org profiles
@@ -189,6 +198,7 @@ model Notification {
 5. ~~Event categories~~ ✅
 6. ~~Comments on posts~~ ✅
 7. ~~QR scanner for orgs~~ ✅ (completes ticket flow)
-8. **Notifications system** (significant work but high value)
-9. **Follow system** (social features)
-10. **Polish and remaining features**
+8. ~~Follow system~~ ✅
+9. ~~Notifications system~~ ✅ (push notifications require paid Apple Developer account)
+10. ~~Stripe payment integration~~ ✅
+11. **Polish and remaining features**

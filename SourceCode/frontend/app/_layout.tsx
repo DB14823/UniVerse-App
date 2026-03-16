@@ -4,6 +4,10 @@ import { TicketsProvider } from "../contexts/TicketsContext";
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Image, StyleSheet, View, Easing, Dimensions } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
+import { StripeProvider } from "@stripe/stripe-react-native";
+
+// Stripe publishable key - safe to expose in frontend
+const STRIPE_PUBLISHABLE_KEY = "pk_test_51TBdQvAgJTtyyhMfekHL463sc5RPWH3Fwog929u0oBgDM4S3tgkJjBIqFteVkukRaVDwvk3llEk78cmmiPWLocb3001Tsdihhd"; // Replace with your Stripe publishable key
 
 SplashScreen.preventAutoHideAsync();
 
@@ -134,11 +138,13 @@ export default function RootLayout() {
 
   return (
     <View style={{ flex: 1 }}>
-      <TicketsProvider>
-        <PostsProvider>
-          <Stack screenOptions={{ headerShown: false }} />
-        </PostsProvider>
-      </TicketsProvider>
+      <StripeProvider publishableKey={STRIPE_PUBLISHABLE_KEY}>
+        <TicketsProvider>
+          <PostsProvider>
+            <Stack screenOptions={{ headerShown: false }} />
+          </PostsProvider>
+        </TicketsProvider>
+      </StripeProvider>
 
       {showOverlay && (
         <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>

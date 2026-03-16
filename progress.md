@@ -10,13 +10,16 @@
 ## Next Steps
 
 ### Short Term
-1. Build notifications system
-2. Follow system for users and organisations
+1. Test Stripe payment integration on device
+2. Polish remaining UI issues
 
 ---
 
 ## Recently Completed
 
+- ✅ Stripe PaymentSheet integration for paid events
+- ✅ Push notifications infrastructure (backend + frontend stubs)
+- ✅ Follow system for users and organisations
 - ✅ Tickets tab redesign with Upcoming/All/Past tabs
 - ✅ Used/expired ticket visual distinction with badges and muted styling
 - ✅ Delete used tickets functionality
