@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   Linking,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import FilterBar from "../components/FilterBar";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colours } from "../../lib/theme/colours";
@@ -214,7 +215,9 @@ export default function EventFeed() {
             style={styles.eventImageFill}
           />
         ) : (
-          <Text style={styles.eventImageText}>image</Text>
+          <View style={styles.eventImagePlaceholder}>
+            <Ionicons name="image-outline" size={40} color={colours.textMuted} />
+          </View>
         )}
         <View style={styles.categoryBadge}>
           <Text style={styles.categoryBadgeText}>{ev.category}</Text>
@@ -427,7 +430,7 @@ const styles = StyleSheet.create({
   eventImage: {
     height: 190,
     borderRadius: 18,
-    backgroundColor: colours.success,
+    backgroundColor: colours.surfaceElevated,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 14,
@@ -438,6 +441,14 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     resizeMode: "cover",
+  },
+
+  eventImagePlaceholder: {
+    flex: 1,
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: colours.surfaceElevated,
   },
 
   eventImageText: {

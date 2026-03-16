@@ -14,10 +14,12 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
+import { Ionicons } from "@expo/vector-icons";
 import { getUserPosts, getCurrentUser, getUserProfile, Post } from "../../lib/postsApi";
 import { EventRecord, getEventsByOrganiser } from "../../lib/eventsApi";
 import { getStaticMapUrl } from "../../lib/staticMaps";
 import { colours } from "../../lib/theme/colours";
+import { shadows } from "../../lib/theme/colours";
 
 export default function ProfileOrg() {
   const router = useRouter();
@@ -264,7 +266,7 @@ export default function ProfileOrg() {
             onPress={() => router.push("/Organisations/profileOrgSettings")}
             activeOpacity={0.85}
           >
-            <Text style={styles.settingsIcon}>⚙</Text>
+            <Ionicons name="settings" size={22} color={colours.textSecondary} />
           </TouchableOpacity>
         ) : (
           <View style={styles.headerSpacer} />
@@ -279,10 +281,25 @@ export default function ProfileOrg() {
         }
       >
         <View style={styles.avatarWrap}>
-          <View style={styles.avatarCircle}>
-            {profileImageUri ? (
-              <Image source={{ uri: profileImageUri }} style={styles.avatarImage} />
-            ) : null}
+          <View style={styles.avatarWithGlow}>
+            <View style={styles.avatarCircle}>
+              {profileImageUri ? (
+                <Image source={{ uri: profileImageUri }} style={styles.avatarImage} />
+              ) : null}
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.statsRow}>
+          <View style={styles.statCard}>
+            <Ionicons name="heart" size={20} color={colours.accent} />
+            <Text style={styles.statNumber}>{totalLikes}</Text>
+            <Text style={styles.statLabel}>Likes</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Ionicons name="grid" size={20} color={colours.secondary} />
+            <Text style={styles.statNumber}>{orgPosts.length}</Text>
+            <Text style={styles.statLabel}>Posts</Text>
           </View>
         </View>
 
@@ -319,10 +336,6 @@ export default function ProfileOrg() {
 
         {activeTab === "posts" ? (
           <>
-            <Text style={styles.likesText}>Likes: {totalLikes}</Text>
-
-            <Text style={styles.postsLabel}>Posts: {orgPosts.length}</Text>
-
             {loading ? (
               <Text style={styles.loadingText}>Loading posts...</Text>
             ) : orgPosts.length === 0 ? (
@@ -375,7 +388,7 @@ export default function ProfileOrg() {
                           style={styles.eventImage}
                         />
                       ) : (
-                        <Text style={styles.eventImageText}>image</Text>
+                        <Ionicons name="image-outline" size={24} color={colours.textMuted} />
                       )}
                     </View>
                     <View style={styles.eventInfo}>
@@ -434,7 +447,7 @@ export default function ProfileOrg() {
                 />
               ) : (
                 <View style={styles.mapFallback}>
-                  <Text style={styles.eventImageText}>image</Text>
+                  <Ionicons name="image-outline" size={40} color={colours.textMuted} />
                 </View>
               )}
             </View>
@@ -534,15 +547,14 @@ const styles = StyleSheet.create({
     height: 44,
   },
 
-  settingsIcon: {
-    color: colours.textSecondary,
-    fontSize: 22,
-    fontWeight: "900",
-  },
-
   scrollArea: { flex: 1, paddingHorizontal: 16 },
 
-  avatarWrap: { alignItems: "center", marginTop: 10, marginBottom: 12 },
+  avatarWrap: { alignItems: "center", marginTop: 10, marginBottom: 16 },
+
+  avatarWithGlow: {
+    ...shadows.glow,
+    borderRadius: 999,
+  },
 
   avatarCircle: {
     width: 150,
@@ -558,6 +570,39 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     resizeMode: "cover",
+  },
+
+  statsRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 16,
+    marginBottom: 20,
+  },
+
+  statCard: {
+    flex: 1,
+    maxWidth: 140,
+    backgroundColor: colours.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colours.border,
+    padding: 16,
+    alignItems: "center",
+    ...shadows.small,
+  },
+
+  statNumber: {
+    color: colours.textPrimary,
+    fontSize: 28,
+    fontWeight: "900",
+    marginTop: 8,
+  },
+
+  statLabel: {
+    color: colours.textSecondary,
+    fontSize: 14,
+    fontWeight: "700",
+    marginTop: 2,
   },
 
   tabRow: {
@@ -585,22 +630,6 @@ const styles = StyleSheet.create({
   },
   tabTextActive: {
     color: colours.textPrimary,
-  },
-
-  likesText: {
-    textAlign: "center",
-    color: colours.textPrimary,
-    fontSize: 28,
-    fontWeight: "900",
-    marginBottom: 18,
-  },
-
-  postsLabel: {
-    textAlign: "center",
-    color: colours.textSecondary,
-    fontSize: 18,
-    fontWeight: "900",
-    marginBottom: 14,
   },
 
   eventsList: {
@@ -631,11 +660,6 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     resizeMode: "cover",
-  },
-  eventImageText: {
-    color: colours.textMuted,
-    fontSize: 12,
-    fontWeight: "800",
   },
   eventInfo: {
     flex: 1,

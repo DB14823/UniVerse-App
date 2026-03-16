@@ -6,6 +6,7 @@ import {
   Pressable,
   Image,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { colours } from "../../lib/theme/colours";
 
 interface EventCardProps {
@@ -42,7 +43,9 @@ export default function EventCard({
             style={styles.eventImageFill}
           />
         ) : (
-          <Text style={styles.eventImageText}>image</Text>
+          <View style={styles.eventImagePlaceholder}>
+            <Ionicons name="image-outline" size={40} color={colours.textMuted} />
+          </View>
         )}
       </View>
 
@@ -95,16 +98,19 @@ const styles = StyleSheet.create({
     backgroundColor: colours.surfaceElevated,
     justifyContent: "center",
     alignItems: "center",
+    overflow: "hidden",
   },
   eventImageFill: {
     width: "100%",
     height: "100%",
     resizeMode: "cover",
   },
-  eventImageText: {
-    color: colours.textSecondary,
-    fontSize: 16,
-    fontWeight: "700",
+  eventImagePlaceholder: {
+    flex: 1,
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: colours.surfaceElevated,
   },
   eventInfoRow: {
     flexDirection: "row",

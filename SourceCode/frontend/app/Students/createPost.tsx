@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { usePosts } from "../../contexts/PostsContext";
 import { colours } from "../../lib/theme/colours";
@@ -125,7 +126,7 @@ export default function CreatePost() {
             </View>
           ) : (
             <View style={styles.imagePlaceholder}>
-              <Text style={styles.placeholderIcon}>📷</Text>
+              <Ionicons name="image-outline" size={48} color={colours.textMuted} />
               <Text style={styles.placeholderText}>No image selected</Text>
             </View>
           )}
@@ -133,12 +134,12 @@ export default function CreatePost() {
 
         <View style={styles.buttonRow}>
           <TouchableOpacity style={styles.imageBtn} onPress={pickImage} activeOpacity={0.8}>
-            <Text style={styles.imageBtnIcon}>🖼️</Text>
+            <Ionicons name="images-outline" size={32} color={colours.secondary} />
             <Text style={styles.imageBtnText}>Choose from Library</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.imageBtn} onPress={takePhoto} activeOpacity={0.8}>
-            <Text style={styles.imageBtnIcon}>📸</Text>
+            <Ionicons name="camera" size={32} color={colours.primary} />
             <Text style={styles.imageBtnText}>Take Photo</Text>
           </TouchableOpacity>
         </View>
@@ -265,14 +266,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  placeholderIcon: {
-    fontSize: 48,
-    marginBottom: 8,
-  },
   placeholderText: {
     fontSize: 16,
     color: colours.textMuted,
     fontWeight: "600",
+    marginTop: 8,
   },
 
   buttonRow: {
@@ -288,21 +286,18 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: Platform.OS === "ios" ? 0.15 : 0.3,
+    shadowColor: colours.glow,
+    shadowOpacity: Platform.OS === "ios" ? 0.3 : 0.5,
     shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
+    shadowRadius: 6,
     elevation: 3,
-  },
-  imageBtnIcon: {
-    fontSize: 32,
-    marginBottom: 8,
   },
   imageBtnText: {
     fontSize: 13,
     fontWeight: "700",
     color: colours.textPrimary,
     textAlign: "center",
+    marginTop: 8,
   },
 
   captionSection: {
