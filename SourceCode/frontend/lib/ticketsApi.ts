@@ -70,6 +70,8 @@ export interface TicketRecord {
   organiserId: string;
   createdAt: string;
   eventImageUrl: string | null;
+  used: boolean;
+  usedAt: string | null;
   organiser: {
     id: string;
     name: string;

@@ -17,6 +17,12 @@
 
 ## Recently Completed
 
+- ✅ Tickets tab redesign with Upcoming/All/Past tabs
+- ✅ Used/expired ticket visual distinction with badges and muted styling
+- ✅ Delete used tickets functionality
+- ✅ QR code improvements (hidden for past/used tickets, better fullscreen modal with event info)
+- ✅ FilterBar redesign on EventFeed (full-width search, side-by-side dropdowns)
+- ✅ Ticket price formatting (displayed as £X.XX)
 - ✅ Event-specific ticket validation (scanner checks ticket matches selected event)
 - ✅ QR code scanner for organisations (camera integration, ticket validation, recent scans)
 - ✅ Comments on posts (backend + frontend, with comment counts)

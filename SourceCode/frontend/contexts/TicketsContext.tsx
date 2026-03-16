@@ -6,6 +6,7 @@ export interface Ticket {
   ticketId: string;
   day: string;
   title: string;
+  date: string; // ISO date string for filtering
   dateLabel: string;
   dateLabelDate: string;
   dateLabelTime: string;
@@ -13,6 +14,8 @@ export interface Ticket {
   price: string;
   eventImageUrl: string | null;
   mapLocation: string;
+  used: boolean;
+  usedAt: string | null;
 }
 
 type TicketsContextType = {
@@ -38,6 +41,7 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
             id: t.id,
             ticketId: t.ticketId,
             day: new Date(t.date).toLocaleDateString("en-US", { weekday: "long" }),
+            date: t.date,
             title: t.title,
             dateLabel: new Date(t.date).toLocaleString(),
             dateLabelDate: new Date(t.date).toLocaleDateString(),
@@ -46,6 +50,8 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
             price: t.price,
             eventImageUrl: t.eventImageUrl,
             mapLocation: t.location,
+            used: t.used,
+            usedAt: t.usedAt,
           }));
           setTickets(mapped);
           await SecureStore.setItemAsync("tickets", JSON.stringify(mapped));
@@ -104,6 +110,7 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
         id: t.id,
         ticketId: t.ticketId,
         day: new Date(t.date).toLocaleDateString("en-US", { weekday: "long" }),
+        date: t.date,
         title: t.title,
         dateLabel: new Date(t.date).toLocaleString(),
         dateLabelDate: new Date(t.date).toLocaleDateString(),
@@ -112,6 +119,8 @@ export function TicketsProvider({ children }: { children: ReactNode }) {
         price: t.price,
         eventImageUrl: t.eventImageUrl,
         mapLocation: t.location,
+        used: t.used,
+        usedAt: t.usedAt,
       }));
       setTickets(mapped);
       await SecureStore.setItemAsync("tickets", JSON.stringify(mapped));

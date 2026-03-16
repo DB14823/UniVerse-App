@@ -47,11 +47,12 @@ export default function FilterBar({
   const showCategoryFilter = categoryValue !== undefined && onSelectCategory;
 
   return (
-    <View style={styles.topBar} accessibilityRole="search">
+    <View style={styles.container} accessibilityRole="search">
+      {/* Full-width search bar */}
       <View style={styles.searchWrap}>
         <TextInput
           style={styles.searchInput}
-          placeholder="Search"
+          placeholder="Search events..."
           placeholderTextColor="rgba(255,255,255,0.55)"
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -61,27 +62,71 @@ export default function FilterBar({
         <Text style={styles.searchIcon}>⌕</Text>
       </View>
 
-      {showCategoryFilter && categoryOpen !== undefined && setCategoryOpen && categoryItems && setCategoryItems && (
-        <View style={styles.categoryWrap}>
+      {/* Dropdowns side by side */}
+      <View style={styles.dropdownsRow}>
+        {showCategoryFilter && categoryOpen !== undefined && setCategoryOpen && categoryItems && setCategoryItems && (
+          <View style={styles.dropdownWrap}>
+            <DropDownPicker
+              open={categoryOpen}
+              value={categoryValue}
+              items={categoryItems}
+              setOpen={setCategoryOpen}
+              setValue={(val: any) => {
+                if (typeof val === "function") {
+                  const resolved = val(categoryValue);
+                  onSelectCategory(resolved);
+                } else {
+                  onSelectCategory(val as string);
+                }
+              }}
+              setItems={setCategoryItems}
+              placeholder={categoryPlaceholder}
+              style={[styles.dropdown, categoryOpen && styles.dropdownOpen]}
+              dropDownContainerStyle={[
+                styles.dropdownContainer,
+                categoryOpen && styles.dropdownContainerOpen,
+              ]}
+              textStyle={styles.dropdownText}
+              labelStyle={styles.dropdownLabel}
+              placeholderStyle={styles.dropdownPlaceholder}
+              listItemLabelStyle={styles.dropdownItemLabel}
+              listItemContainerStyle={styles.dropdownItemContainer}
+              ArrowUpIconComponent={() => (
+                <Ionicons name="chevron-up" size={16} color={colours.textSecondary} />
+              )}
+              ArrowDownIconComponent={() => (
+                <Ionicons name="chevron-down" size={16} color={colours.textSecondary} />
+              )}
+              TickIconComponent={() => (
+                <Ionicons name="checkmark" size={16} color={colours.secondary} />
+              )}
+              listMode="SCROLLVIEW"
+              zIndex={2000}
+              zIndexInverse={2000}
+            />
+          </View>
+        )}
+
+        <View style={styles.dropdownWrap}>
           <DropDownPicker
-            open={categoryOpen}
-            value={categoryValue}
-            items={categoryItems}
-            setOpen={setCategoryOpen}
+            open={open}
+            value={selectedValue}
+            items={items}
+            setOpen={setOpen}
             setValue={(val: any) => {
               if (typeof val === "function") {
-                const resolved = val(categoryValue);
-                onSelectCategory(resolved);
+                const resolved = val(selectedValue);
+                onSelectValue(resolved);
               } else {
-                onSelectCategory(val as string);
+                onSelectValue(val as string);
               }
             }}
-            setItems={setCategoryItems}
-            placeholder={categoryPlaceholder}
-            style={[styles.dropdown, categoryOpen && styles.dropdownOpen]}
+            setItems={setItems}
+            placeholder={placeholder}
+            style={[styles.dropdown, open && styles.dropdownOpen]}
             dropDownContainerStyle={[
               styles.dropdownContainer,
-              categoryOpen && styles.dropdownContainerOpen,
+              open && styles.dropdownContainerOpen,
             ]}
             textStyle={styles.dropdownText}
             labelStyle={styles.dropdownLabel}
@@ -89,78 +134,33 @@ export default function FilterBar({
             listItemLabelStyle={styles.dropdownItemLabel}
             listItemContainerStyle={styles.dropdownItemContainer}
             ArrowUpIconComponent={() => (
-              <Ionicons name="chevron-up" size={18} color={colours.textSecondary} />
+              <Ionicons name="chevron-up" size={16} color={colours.textSecondary} />
             )}
             ArrowDownIconComponent={() => (
-              <Ionicons name="chevron-down" size={18} color={colours.textSecondary} />
+              <Ionicons name="chevron-down" size={16} color={colours.textSecondary} />
             )}
             TickIconComponent={() => (
-              <Ionicons name="checkmark" size={18} color={colours.secondary} />
+              <Ionicons name="checkmark" size={16} color={colours.secondary} />
             )}
             listMode="SCROLLVIEW"
-            zIndex={2000}
-            zIndexInverse={2000}
+            zIndex={1000}
+            zIndexInverse={1000}
           />
         </View>
-      )}
-
-      <View style={styles.dayWrap}>
-       <DropDownPicker
-  open={open}
-  value={selectedValue}
-  items={items}
-  setOpen={setOpen}
-  setValue={(val: any) => {
-    if (typeof val === "function") {
-      const resolved = val(selectedValue);
-      onSelectValue(resolved);
-    } else {
-      onSelectValue(val as string);
-    }
-  }}
-  setItems={setItems}
-  placeholder={placeholder}
-  style={[styles.dropdown, open && styles.dropdownOpen]}
-  dropDownContainerStyle={[
-    styles.dropdownContainer,
-    open && styles.dropdownContainerOpen,
-  ]}
-  textStyle={styles.dropdownText}
-  labelStyle={styles.dropdownLabel}
-  placeholderStyle={styles.dropdownPlaceholder}
-  listItemLabelStyle={styles.dropdownItemLabel}
-  listItemContainerStyle={styles.dropdownItemContainer}
-  ArrowUpIconComponent={() => (
-    <Ionicons name="chevron-up" size={18} color={colours.textSecondary} />
-  )}
-  ArrowDownIconComponent={() => (
-    <Ionicons name="chevron-down" size={18} color={colours.textSecondary} />
-  )}
-  TickIconComponent={() => (
-    <Ionicons name="checkmark" size={18} color={colours.secondary} />
-  )}
-  listMode="SCROLLVIEW"
-  zIndex={1000}
-  zIndexInverse={1000}
-/>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
+  container: {
     paddingHorizontal: 16,
-    gap: 12,
     paddingTop: 8,
-    paddingBottom: 8,
+    paddingBottom: 4,
     zIndex: 3000,
   },
 
   searchWrap: {
-    flex: 1,
     height: 44,
     borderRadius: 999,
     backgroundColor: colours.glass,
@@ -170,6 +170,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     borderWidth: 1,
     borderColor: colours.border,
+    marginBottom: 8,
   },
 
   searchInput: {
@@ -185,23 +186,23 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
 
-  dayWrap: {
-    width: 132,
-    height: 44,
+  dropdownsRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+
+  dropdownWrap: {
+    flex: 1,
+    height: 40,
     zIndex: 4000,
   },
 
-  categoryWrap: {
-    width: 132,
-    height: 44,
-    zIndex: 5000,
-  },
-
-   dropdown: {
+  dropdown: {
     backgroundColor: "rgba(255,255,255,0.10)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.06)",
-    borderRadius: 28,
+    borderRadius: 20,
+    height: 40,
   },
 
   dropdownOpen: {
@@ -216,10 +217,6 @@ const styles = StyleSheet.create({
     backgroundColor: colours.surfaceElevated,
     elevation: 8,
     zIndex: 2000,
-    position: "absolute",
-    top: "100%",
-    left: 0,
-    right: 0,
   },
 
   dropdownContainerOpen: {
@@ -227,11 +224,10 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 0,
   },
 
-
   dropdownText: {
     color: colours.textPrimary,
-    fontWeight: "800",
-    fontSize: 13,
+    fontWeight: "700",
+    fontSize: 12,
   },
 
   dropdownLabel: {
@@ -240,8 +236,8 @@ const styles = StyleSheet.create({
 
   dropdownPlaceholder: {
     color: "rgba(255,255,255,0.55)",
-    fontWeight: "800",
-    fontSize: 13,
+    fontWeight: "700",
+    fontSize: 12,
   },
 
   dropdownItemContainer: {
@@ -250,6 +246,7 @@ const styles = StyleSheet.create({
 
   dropdownItemLabel: {
     color: colours.textPrimary,
-    fontWeight: "700",
+    fontWeight: "600",
+    fontSize: 13,
   },
 });

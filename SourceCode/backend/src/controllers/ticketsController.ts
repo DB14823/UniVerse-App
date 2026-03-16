@@ -45,10 +45,12 @@ export const createTicket = async (req: Request, res: Response) => {
       description: event.description,
       date: event.date,
       location: event.location,
-      price: event.price,
+      price: `£${Number(event.price).toFixed(2)}`,
       organiserId: event.organiserId,
       createdAt: event.createdAt,
       eventImageUrl: event.eventImageUrl,
+      used: ticket.used,
+      usedAt: ticket.usedAt,
       organiser: null as any, // will fill later
     };
 
@@ -95,11 +97,13 @@ export const getMyTickets = async (req: Request, res: Response) => {
         description: ev.description,
         date: ev.date,
         location: ev.location,
-        price: ev.price,
+        price: `£${Number(ev.price).toFixed(2)}`,
         organiserId: ev.organiserId,
         createdAt: ev.createdAt,
         eventImageUrl: ev.eventImageUrl,
         organiser: ev.organiser,
+        used: t.used,
+        usedAt: t.usedAt,
       };
     });
 
