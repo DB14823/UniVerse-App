@@ -20,6 +20,7 @@ import {
 } from "react-native";
 import FilterBar from "../components/FilterBar";
 import EventCard from "../components/EventCard";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { clearSession } from "../../lib/auth";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -664,12 +665,24 @@ export default function EventsOrg() {
                   )}
 
                   {!isEditing && selectedEvent && (
-                    <TouchableOpacity
-                      style={styles.openMapBtn}
-                      onPress={() => Linking.openURL(mapUrl)}
-                    >
-                      <Text style={styles.openMapText}>Open in Maps</Text>
-                    </TouchableOpacity>
+                    <>
+                      <TouchableOpacity
+                        style={[styles.openMapBtn, styles.scanBtn]}
+                        onPress={() => {
+                          setSelectedEvent(null);
+                          router.push(`/Organisations/scanTickets?eventId=${selectedEvent.id}&eventTitle=${encodeURIComponent(selectedEvent.title)}` as any);
+                        }}
+                      >
+                        <Ionicons name="scan-outline" size={20} color={colours.surface} style={{ marginRight: 8 }} />
+                        <Text style={styles.openMapText}>Scan Tickets</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.openMapBtn}
+                        onPress={() => Linking.openURL(mapUrl)}
+                      >
+                        <Text style={styles.openMapText}>Open in Maps</Text>
+                      </TouchableOpacity>
+                    </>
                   )}
                 </View>
               </TouchableWithoutFeedback>
@@ -962,6 +975,10 @@ const styles = StyleSheet.create({
     backgroundColor: colours.primary,
     alignItems: "center",
     justifyContent: "center",
+    flexDirection: "row",
+  },
+  scanBtn: {
+    backgroundColor: colours.success,
   },
 
   openMapText: {

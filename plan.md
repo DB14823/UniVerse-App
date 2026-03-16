@@ -47,6 +47,8 @@ UniVerse is a university events management app where:
 - Shows validation results (student info, event details)
 - Tracks recent successful scans
 - Fixed duplicate scan issue with ref-based debouncing
+- Added event-specific validation: scanner checks ticket belongs to selected event
+- Removed redundant Scan tab from bottom nav (now accessed via event modal)
 
 ### 6. Comments on Posts ✅ COMPLETED
 - Added Comment model to Prisma schema

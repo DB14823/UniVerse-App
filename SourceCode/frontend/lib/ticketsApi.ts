@@ -137,7 +137,7 @@ export interface ValidatedTicket {
   };
 }
 
-export async function validateTicket(ticketId: string): Promise<{ success: boolean; ticket: ValidatedTicket }> {
+export async function validateTicket(ticketId: string, eventId?: string): Promise<{ success: boolean; ticket: ValidatedTicket }> {
   const token = await getAuthToken();
   if (!token) {
     throw new Error("Not authenticated");
@@ -149,7 +149,7 @@ export async function validateTicket(ticketId: string): Promise<{ success: boole
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ ticketId }),
+    body: JSON.stringify({ ticketId, eventId }),
   });
 
   return data as { success: boolean; ticket: ValidatedTicket };

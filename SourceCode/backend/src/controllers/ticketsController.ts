@@ -150,7 +150,7 @@ export const validateTicket = async (req: Request, res: Response) => {
       return res.status(403).json({ message: "Forbidden - Organisation access required" });
     }
 
-    const { ticketId } = req.body;
+    const { ticketId, eventId } = req.body;
     if (!ticketId) {
       return res.status(400).json({ message: "Missing ticketId" });
     }
@@ -173,6 +173,11 @@ export const validateTicket = async (req: Request, res: Response) => {
     // Verify this organisation owns the event
     if (ticket.event.organiserId !== userId) {
       return res.status(403).json({ message: "This ticket is not for your event" });
+    }
+
+    // If eventId provided, verify ticket matches the specific event
+    if (eventId && ticket.eventId !== eventId) {
+      return res.status(400).json({ message: "Ticket is not for this event" });
     }
 
     // Check if already used

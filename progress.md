@@ -17,6 +17,7 @@
 
 ## Recently Completed
 
+- ✅ Event-specific ticket validation (scanner checks ticket matches selected event)
 - ✅ QR code scanner for organisations (camera integration, ticket validation, recent scans)
 - ✅ Comments on posts (backend + frontend, with comment counts)
 - ✅ Hashtag search endpoint (server-side filtering)

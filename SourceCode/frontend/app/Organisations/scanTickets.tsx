@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useLocalSearchParams } from "expo-router";
 import { colours } from "../../lib/theme/colours";
 import { Ionicons } from "@expo/vector-icons";
 import { validateTicket, ValidatedTicket } from "../../lib/ticketsApi";
@@ -23,6 +24,7 @@ type ScanResult = {
 
 export default function ScanTickets() {
   const insets = useSafeAreaInsets();
+  const { eventId, eventTitle } = useLocalSearchParams<{ eventId?: string; eventTitle?: string }>();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -41,7 +43,7 @@ export default function ScanTickets() {
     setLoading(true);
 
     try {
-      const response = await validateTicket(data);
+      const response = await validateTicket(data, eventId);
       const ticket = response.ticket;
 
       if (response.success) {
@@ -70,7 +72,7 @@ export default function ScanTickets() {
     setShowManual(false);
 
     try {
-      const response = await validateTicket(manualId.trim());
+      const response = await validateTicket(manualId.trim(), eventId);
       const ticket = response.ticket;
 
       if (response.success) {
@@ -128,6 +130,11 @@ export default function ScanTickets() {
     <SafeAreaView style={styles.container} edges={["top"]}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Scan Tickets</Text>
+        {eventTitle ? (
+          <Text style={styles.headerEventName}>
+            Scanning for: {decodeURIComponent(eventTitle)}
+          </Text>
+        ) : null}
         <Text style={styles.headerSubtitle}>
           Point camera at student's QR code
         </Text>
@@ -267,6 +274,12 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "700",
     color: colours.textPrimary,
+  },
+  headerEventName: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: colours.primary,
+    marginTop: 4,
   },
   headerSubtitle: {
     fontSize: 14,
