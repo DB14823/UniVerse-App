@@ -22,6 +22,7 @@ export const createEvent = async (req: Request, res: Response) => {
       location,
       price,
       eventImage,
+      category,
     } = req.body;
 
     if (!title || !date || !location || !price) {
@@ -43,6 +44,7 @@ export const createEvent = async (req: Request, res: Response) => {
     }
 
     const safeDescription = typeof description === "string" ? description : "";
+    const safeCategory = typeof category === "string" ? category : "Other";
 
     const event = await prisma.event.create({
       data: {
@@ -51,6 +53,7 @@ export const createEvent = async (req: Request, res: Response) => {
         date: new Date(date),
         location,
         price,
+        category: safeCategory,
         organiserId: userId,
         eventImageUrl,
       },
@@ -83,7 +86,15 @@ export const createEvent = async (req: Request, res: Response) => {
 
 export const getAllEvents = async (req: Request, res: Response) => {
   try {
+    const { category } = req.query;
+
+    const where: any = {};
+    if (category && typeof category === "string" && category !== "All") {
+      where.category = category;
+    }
+
     const events = await prisma.event.findMany({
+      where,
       orderBy: { date: "asc" },
       include: {
         organiser: {
@@ -169,11 +180,15 @@ export const getMyEvents = async (req: Request, res: Response) => {
             location: true,
           },
         },
+        _count: {
+          select: { tickets: true },
+        },
       },
     });
 
     const eventsWithUrl = events.map((event) => ({
       ...event,
+      ticketCount: event._count.tickets,
       organiser: {
         id: event.organiser.id,
         name: event.organiser.name,
@@ -214,6 +229,7 @@ export const updateEvent = async (req: Request, res: Response) => {
       location,
       price,
       eventImage,
+      category,
     } = req.body;
 
     if (date && !isValidDate(date)) {
@@ -227,6 +243,7 @@ export const updateEvent = async (req: Request, res: Response) => {
     if (date !== undefined) data.date = new Date(date);
     if (location !== undefined) data.location = location;
     if (price !== undefined) data.price = price;
+    if (category !== undefined) data.category = category;
 
     if (eventImage === null) {
       // Delete image

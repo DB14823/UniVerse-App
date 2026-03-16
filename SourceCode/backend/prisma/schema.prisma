@@ -39,6 +39,7 @@ model Event {
   date               DateTime
   location           String
   price              Decimal  @default(0.00) @db.Decimal(10, 2)
+  category           String   @default("Other")
   createdAt          DateTime @default(now())
   organiserId        String
   eventImageUrl      String?

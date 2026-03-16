@@ -223,6 +223,7 @@ export const getUserPosts = async (req: Request, res: Response) => {
 export const getPostById = async (req: Request, res: Response) => {
   try {
     const { postId } = req.params;
+    const userId = req.user?.id;
 
     const post = await prisma.posts.findUnique({
       where: { id: postId },
@@ -242,6 +243,16 @@ export const getPostById = async (req: Request, res: Response) => {
             profileImageUrl: true,
           },
         },
+        _count: {
+          select: { likes: true },
+        },
+        likes: userId
+          ? {
+              where: { userId },
+              select: { id: true },
+              take: 1,
+            }
+          : false,
       },
     });
 
@@ -252,6 +263,10 @@ export const getPostById = async (req: Request, res: Response) => {
     const postWithUser = {
       ...post,
       User: buildPostUser(post),
+      likeCount: post._count?.likes ?? 0,
+      likedByMe: Array.isArray(post.likes) && post.likes.length > 0,
+      likes: undefined,
+      _count: undefined,
     };
 
     return res.json({ post: postWithUser });
@@ -447,5 +462,74 @@ export const updatePostLikes = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error updating post likes:", error);
     return res.status(500).json({ message: "Server error" });
+  }
+};
+
+/**
+ * GET POSTS BY HASHTAG
+ * Retrieves all posts containing a specific hashtag
+ */
+export const getPostsByHashtag = async (req: Request, res: Response) => {
+  try {
+    const { tag } = req.params;
+    const userId = req.user?.id;
+
+    if (!tag) {
+      return res.status(400).json({ message: "Hashtag is required" });
+    }
+
+    // Normalize the tag - ensure it starts with # for matching
+    const normalizedTag = tag.startsWith("#") ? tag : `#${tag}`;
+
+    const posts = await prisma.posts.findMany({
+      where: {
+        caption: {
+          contains: normalizedTag,
+          mode: "insensitive",
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      include: {
+        student: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+            profileImageUrl: true,
+          },
+        },
+        organisation: {
+          select: {
+            id: true,
+            name: true,
+            profileImageUrl: true,
+          },
+        },
+        _count: {
+          select: { likes: true },
+        },
+        likes: userId
+          ? {
+              where: { userId },
+              select: { id: true },
+              take: 1,
+            }
+          : false,
+      },
+    });
+
+    const postsWithUser = posts.map((post: any) => ({
+      ...post,
+      User: buildPostUser(post),
+      likeCount: post._count?.likes ?? 0,
+      likedByMe: Array.isArray(post.likes) && post.likes.length > 0,
+      likes: undefined,
+      _count: undefined,
+    }));
+
+    return res.json({ posts: postsWithUser });
+  } catch (error) {
+    console.error("Error fetching posts by hashtag:", error);
+    return res.status(500).json({ message: "Server error", error });
   }
 };

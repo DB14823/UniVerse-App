@@ -1,14 +1,15 @@
 import { Router } from "express";
 import { authMiddleware } from "../middleware/authMiddleware";
 import { requireAnyRole } from "../middleware/roleMiddleware";
-import { 
-  createPost, 
-  getAllPosts, 
-  getUserPosts, 
+import {
+  createPost,
+  getAllPosts,
+  getUserPosts,
   deletePost,
   updatePost,
   getPostById,
-  updatePostLikes
+  updatePostLikes,
+  getPostsByHashtag
 } from "../controllers/postsController";
 
 const router = Router();
@@ -21,6 +22,9 @@ router.post("/", requireAnyRole(["STUDENT", "ORGANISATION"]), createPost);
 
 // Get all posts
 router.get("/", getAllPosts);
+
+// Get posts by hashtag (must be before /:postId)
+router.get("/hashtag/:tag", getPostsByHashtag);
 
 // Get posts by specific user
 router.get("/user/:userId", getUserPosts);
