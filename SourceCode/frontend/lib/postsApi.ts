@@ -82,8 +82,22 @@ export interface Post {
   organisationId?: string | null;
 
   likeCount: number;
+  commentCount: number;
   likedByMe: boolean;
 
+  User: {
+    id: string;
+    username: string;
+    name: string | null;
+    role: "STUDENT" | "ORGANISATION";
+    profileImageUrl: string | null;
+  };
+}
+
+export interface Comment {
+  id: string;
+  content: string;
+  createdAt: string;
   User: {
     id: string;
     username: string;
@@ -493,4 +507,61 @@ export async function getPostsByHashtag(tag: string): Promise<Post[]> {
   });
 
   return data.posts;
+}
+
+/**
+ * Get comments for a post
+ */
+export async function getComments(postId: string): Promise<Comment[]> {
+  const token = await getAuthToken();
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  const data = await fetchWithAuth(`${API_URL}/posts/${postId}/comments`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return data.comments;
+}
+
+/**
+ * Create a comment on a post
+ */
+export async function createComment(postId: string, content: string): Promise<Comment> {
+  const token = await getAuthToken();
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  const data = await fetchWithAuth(`${API_URL}/posts/${postId}/comments`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ content }),
+  });
+
+  return data.comment;
+}
+
+/**
+ * Delete a comment
+ */
+export async function deleteComment(postId: string, commentId: string): Promise<void> {
+  const token = await getAuthToken();
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  await fetchWithAuth(`${API_URL}/posts/${postId}/comments/${commentId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 }

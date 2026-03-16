@@ -19,9 +19,11 @@ interface PostCardProps {
   caption: string;
   liked: boolean;
   likeCount: number;
+  commentCount: number;
   viewerRole?: "STUDENT" | "ORGANISATION" | null;
   onToggleLike: (postId: string) => void;
   onHashtagPress?: (hashtag: string) => void;
+  onPress?: () => void;
 }
 
 export default function PostCard({
@@ -34,9 +36,11 @@ export default function PostCard({
   caption,
   liked,
   likeCount,
+  commentCount,
   viewerRole,
   onToggleLike,
   onHashtagPress,
+  onPress,
 }: PostCardProps) {
   const router = useRouter();
 
@@ -159,6 +163,20 @@ export default function PostCard({
           </Text>
         </View>
 
+        <TouchableOpacity
+          style={styles.commentBtn}
+          onPress={onPress}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.commentIcon}>💬</Text>
+        </TouchableOpacity>
+
+        <View style={styles.commentMeta}>
+          <Text style={styles.commentCount}>
+            {commentCount.toString()}
+          </Text>
+        </View>
+
         <Text style={styles.captionText} numberOfLines={2}>
           {renderCaptionParts}
         </Text>
@@ -250,6 +268,20 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   likeCount: {
+    color: colours.textPrimary,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  commentBtn: {
+    marginRight: 4,
+  },
+  commentIcon: {
+    fontSize: 16,
+  },
+  commentMeta: {
+    marginRight: 10,
+  },
+  commentCount: {
     color: colours.textPrimary,
     fontSize: 14,
     fontWeight: "600",

@@ -53,6 +53,7 @@ model Posts {
   imageUrl      String?
   createdAt     DateTime @default(now())
   likes         Like[]
+  comments      Comment[]
   studentId     String?
   organisationId String?
   student       Student?      @relation(fields: [studentId], references: [id], onDelete: Cascade)
@@ -70,6 +71,18 @@ model Like {
   @@unique([postId, userId])
   @@index([userId])
   @@index([postId])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+  postId    String
+  userId    String
+  post      Posts    @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([userId])
 }
 
 model Ticket {

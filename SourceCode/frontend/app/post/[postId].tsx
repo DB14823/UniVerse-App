@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -10,13 +10,31 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import * as SecureStore from "expo-secure-store";
 import { colours } from "../../lib/theme/colours";
-import { getPostById, Post, deletePost, updatePost, getCurrentUser } from "../../lib/postsApi";
+import { getPostById, getComments, createComment, deleteComment, Post, Comment, deletePost, updatePost, getCurrentUser } from "../../lib/postsApi";
+
+function formatTimeAgo(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMins < 1) return "just now";
+  if (diffMins < 60) return `${diffMins}m`;
+  if (diffHours < 24) return `${diffHours}h`;
+  if (diffDays < 7) return `${diffDays}d`;
+  return date.toLocaleDateString();
+}
 
 export default function PostDetail() {
   const router = useRouter();
@@ -24,6 +42,8 @@ export default function PostDetail() {
   const { postId } = useLocalSearchParams<{ postId?: string }>();
 
   const [post, setPost] = useState<Post | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -32,6 +52,21 @@ export default function PostDetail() {
   const [editCaption, setEditCaption] = useState("");
   const [editImage, setEditImage] = useState<string | null>(null);
   const [editLoading, setEditLoading] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [submittingComment, setSubmittingComment] = useState(false);
+
+  const loadComments = useCallback(async () => {
+    if (!postId) return;
+    setCommentsLoading(true);
+    try {
+      const data = await getComments(postId);
+      setComments(data);
+    } catch (err) {
+      console.error("Failed to load comments:", err);
+    } finally {
+      setCommentsLoading(false);
+    }
+  }, [postId]);
 
   useEffect(() => {
     let active = true;
@@ -59,6 +94,9 @@ export default function PostDetail() {
           setEditCaption(data.caption);
           setError(null);
         }
+
+        // Load comments
+        loadComments();
       } catch (err: any) {
         if (active) {
           setError(err.message || "Failed to load post");
@@ -75,7 +113,7 @@ export default function PostDetail() {
     return () => {
       active = false;
     };
-  }, [postId]);
+  }, [postId, loadComments]);
 
   const isOwner = post && currentUserId && (post.studentId === currentUserId || post.organisationId === currentUserId);
 
@@ -145,6 +183,45 @@ export default function PostDetail() {
     } finally {
       setEditLoading(false);
     }
+  };
+
+  const handleSubmitComment = async () => {
+    if (!postId || !commentText.trim() || submittingComment) return;
+
+    try {
+      setSubmittingComment(true);
+      const newComment = await createComment(postId, commentText.trim());
+      setComments((prev) => [...prev, newComment]);
+      setCommentText("");
+      Keyboard.dismiss();
+    } catch (err: any) {
+      Alert.alert("Error", err.message || "Failed to post comment");
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
+  const handleDeleteComment = (commentId: string) => {
+    Alert.alert(
+      "Delete Comment",
+      "Are you sure you want to delete this comment?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              if (!postId) return;
+              await deleteComment(postId, commentId);
+              setComments((prev) => prev.filter((c) => c.id !== commentId));
+            } catch (err: any) {
+              Alert.alert("Error", err.message || "Failed to delete comment");
+            }
+          },
+        },
+      ]
+    );
   };
 
   const bottomPad = 24 + Math.max(insets.bottom, 0);
@@ -242,42 +319,119 @@ export default function PostDetail() {
         </TouchableOpacity>
       </Modal>
 
-      <ScrollView
-        style={styles.scrollArea}
-        contentContainerStyle={{ paddingBottom: bottomPad }}
+      <KeyboardAvoidingView
+        style={styles.flex1}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={0}
       >
-        {loading ? (
-          <Text style={styles.statusText}>Loading post...</Text>
-        ) : error ? (
-          <Text style={styles.statusText}>{error}</Text>
-        ) : post ? (
-          <View style={styles.card}>
-            <View style={styles.userRow}>
-              <View style={styles.avatar}>
-                {post.User.profileImageUrl ? (
-                  <Image
-                    source={{ uri: post.User.profileImageUrl }}
-                    style={styles.avatarImage}
-                  />
-                ) : null}
+        <ScrollView
+          style={styles.scrollArea}
+          contentContainerStyle={{ paddingBottom: bottomPad + 80 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          {loading ? (
+            <Text style={styles.statusText}>Loading post...</Text>
+          ) : error ? (
+            <Text style={styles.statusText}>{error}</Text>
+          ) : post ? (
+            <View style={styles.card}>
+              <View style={styles.userRow}>
+                <View style={styles.avatar}>
+                  {post.User.profileImageUrl ? (
+                    <Image
+                      source={{ uri: post.User.profileImageUrl }}
+                      style={styles.avatarImage}
+                    />
+                  ) : null}
+                </View>
+                <Text style={styles.username}>{post.User.username}</Text>
               </View>
-              <Text style={styles.username}>{post.User.username}</Text>
-            </View>
 
-            <View style={styles.mediaCard}>
-              <Image
-                source={{ uri: post.imageUrl }}
-                style={styles.mediaImage}
-              />
-            </View>
+              <View style={styles.mediaCard}>
+                <Image
+                  source={{ uri: post.imageUrl }}
+                  style={styles.mediaImage}
+                />
+              </View>
 
-            <View style={styles.metaRow}>
-              <Text style={styles.likesText}>{post.likeCount} likes</Text>
-              <Text style={styles.captionText}>{renderCaptionParts(post.caption)}</Text>
+              <View style={styles.metaRow}>
+                <Text style={styles.likesText}>{post.likeCount} likes</Text>
+                <Text style={styles.captionText}>{renderCaptionParts(post.caption)}</Text>
+              </View>
+
+              {/* Comments Section */}
+              <View style={styles.commentsSection}>
+                <Text style={styles.commentsHeader}>
+                  Comments{comments.length > 0 ? ` (${comments.length})` : ""}
+                </Text>
+
+                {commentsLoading ? (
+                  <ActivityIndicator size="small" color={colours.primary} style={styles.commentsLoading} />
+                ) : comments.length === 0 ? (
+                  <Text style={styles.noCommentsText}>No comments yet. Be the first to comment!</Text>
+                ) : (
+                  comments.map((comment) => (
+                    <View key={comment.id} style={styles.commentItem}>
+                      <View style={styles.commentAvatar}>
+                        {comment.User.profileImageUrl ? (
+                          <Image
+                            source={{ uri: comment.User.profileImageUrl }}
+                            style={styles.commentAvatarImage}
+                          />
+                        ) : null}
+                      </View>
+                      <View style={styles.commentContent}>
+                        <View style={styles.commentHeader}>
+                          <Text style={styles.commentUsername}>{comment.User.username}</Text>
+                          <Text style={styles.commentTime}>{formatTimeAgo(comment.createdAt)}</Text>
+                        </View>
+                        <Text style={styles.commentText}>{comment.content}</Text>
+                      </View>
+                      {comment.User.id === currentUserId && (
+                        <TouchableOpacity
+                          style={styles.deleteCommentBtn}
+                          onPress={() => handleDeleteComment(comment.id)}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={styles.deleteCommentText}>×</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  ))
+                )}
+              </View>
             </View>
+          ) : null}
+        </ScrollView>
+
+        {/* Comment Input */}
+        {post && (
+          <View style={[styles.commentInputContainer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+            <TextInput
+              style={styles.commentInput}
+              placeholder="Add a comment..."
+              placeholderTextColor={colours.textMuted}
+              value={commentText}
+              onChangeText={setCommentText}
+              multiline
+              maxLength={500}
+              editable={!submittingComment}
+            />
+            <TouchableOpacity
+              style={[styles.submitBtn, (!commentText.trim() || submittingComment) && styles.submitBtnDisabled]}
+              onPress={handleSubmitComment}
+              disabled={!commentText.trim() || submittingComment}
+              activeOpacity={0.8}
+            >
+              {submittingComment ? (
+                <ActivityIndicator size="small" color={colours.primary} />
+              ) : (
+                <Text style={styles.submitBtnText}>Post</Text>
+              )}
+            </TouchableOpacity>
           </View>
-        ) : null}
-      </ScrollView>
+        )}
+      </KeyboardAvoidingView>
 
       {/* Edit Post Modal */}
       <Modal
@@ -360,6 +514,7 @@ export default function PostDetail() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colours.background },
+  flex1: { flex: 1 },
 
   headerRow: {
     flexDirection: "row",
@@ -485,6 +640,120 @@ const styles = StyleSheet.create({
   captionText: { color: colours.textPrimary, fontSize: 18, fontWeight: "800" },
   captionTextInline: { color: colours.textPrimary, fontSize: 18, fontWeight: "800" },
   hashtag: { color: colours.secondary, fontSize: 18, fontWeight: "800" },
+
+  // Comments styles
+  commentsSection: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: colours.border,
+  },
+  commentsHeader: {
+    color: colours.textPrimary,
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 12,
+  },
+  commentsLoading: {
+    marginTop: 20,
+  },
+  noCommentsText: {
+    color: colours.textMuted,
+    fontSize: 14,
+    textAlign: "center",
+    marginTop: 8,
+  },
+  commentItem: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 12,
+    gap: 10,
+  },
+  commentAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colours.glass,
+    borderWidth: 1,
+    borderColor: colours.border,
+    overflow: "hidden",
+  },
+  commentAvatarImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
+  commentContent: {
+    flex: 1,
+    gap: 2,
+  },
+  commentHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  commentUsername: {
+    color: colours.textPrimary,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  commentTime: {
+    color: colours.textMuted,
+    fontSize: 12,
+  },
+  commentText: {
+    color: colours.textPrimary,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  deleteCommentBtn: {
+    padding: 4,
+  },
+  deleteCommentText: {
+    color: colours.textMuted,
+    fontSize: 18,
+    fontWeight: "600",
+  },
+
+  // Comment input
+  commentInputContainer: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    gap: 12,
+    backgroundColor: colours.background,
+    borderTopWidth: 1,
+    borderTopColor: colours.border,
+  },
+  commentInput: {
+    flex: 1,
+    backgroundColor: colours.surface,
+    borderWidth: 1,
+    borderColor: colours.border,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    color: colours.textPrimary,
+    fontSize: 15,
+    maxHeight: 100,
+  },
+  submitBtn: {
+    backgroundColor: colours.primary,
+    borderRadius: 20,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  submitBtnDisabled: {
+    opacity: 0.5,
+  },
+  submitBtnText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "600",
+  },
 
   // Edit modal styles
   editModalContainer: {

@@ -357,7 +357,10 @@ export default function EventFeed() {
                       // call backend to create the ticket
                       await purchaseTicket(selectedEvent.id);
                       // add to local cache for immediate UI update
-                      const ticket: Ticket = { ...selectedEvent };
+                      const ticket: Ticket = {
+                        ...selectedEvent,
+                        day: selectedEvent.date.toLocaleDateString("en-US", { weekday: "long" }),
+                      };
                       await addTicket(ticket);
                       Alert.alert("Ticket added", "Your ticket is now available in My Tickets.");
                       setSelectedEvent(null);

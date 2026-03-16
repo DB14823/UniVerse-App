@@ -13,6 +13,7 @@ export type Post = {
   caption: string;
   imageUri?: string;
   likeCount: number;
+  commentCount: number;
   liked: boolean;
   timestamp: number;
 };
@@ -21,6 +22,8 @@ type PostsContextType = {
   posts: Post[];
   addPost: (caption: string, imageUri: string) => Promise<void>;
   toggleLike: (id: string) => Promise<void>;
+  incrementCommentCount: (postId: string) => void;
+  decrementCommentCount: (postId: string) => void;
   refreshPosts: () => Promise<void>;
   loading: boolean;
 };
@@ -57,6 +60,7 @@ export function PostsProvider({ children }: { children: ReactNode }) {
         caption: dbPost.caption,
         imageUri: dbPost.imageUrl || null,
         likeCount: typeof dbPost.likeCount === "number" ? dbPost.likeCount : 0,
+        commentCount: typeof dbPost.commentCount === "number" ? dbPost.commentCount : 0,
         liked: Boolean(dbPost.likedByMe),
         timestamp: new Date(dbPost.createdAt).getTime(),
       }));
@@ -87,6 +91,7 @@ export function PostsProvider({ children }: { children: ReactNode }) {
         caption: dbPost.caption,
         imageUri: dbPost.imageUrl || null,
         likeCount: typeof dbPost.likeCount === "number" ? dbPost.likeCount : 0,
+        commentCount: typeof dbPost.commentCount === "number" ? dbPost.commentCount : 0,
         liked: Boolean(dbPost.likedByMe),
         timestamp: new Date(dbPost.createdAt).getTime(),
       };
@@ -153,8 +158,24 @@ export function PostsProvider({ children }: { children: ReactNode }) {
     await loadPosts();
   };
 
+  const incrementCommentCount = (postId: string) => {
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId ? { ...p, commentCount: p.commentCount + 1 } : p
+      )
+    );
+  };
+
+  const decrementCommentCount = (postId: string) => {
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId ? { ...p, commentCount: Math.max(0, p.commentCount - 1) } : p
+      )
+    );
+  };
+
   return (
-    <PostsContext.Provider value={{ posts, addPost, toggleLike, refreshPosts, loading }}>
+    <PostsContext.Provider value={{ posts, addPost, toggleLike, incrementCommentCount, decrementCommentCount, refreshPosts, loading }}>
       {children}
     </PostsContext.Provider>
   );

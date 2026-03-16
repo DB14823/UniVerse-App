@@ -9,7 +9,10 @@ import {
   updatePost,
   getPostById,
   updatePostLikes,
-  getPostsByHashtag
+  getPostsByHashtag,
+  getComments,
+  createComment,
+  deleteComment
 } from "../controllers/postsController";
 
 const router = Router();
@@ -40,5 +43,10 @@ router.delete("/:postId", requireAnyRole(["STUDENT", "ORGANISATION"]), deletePos
 
 // Update like count for a post
 router.post("/:postId/like", updatePostLikes);
+
+// Comment routes
+router.get("/:postId/comments", getComments);
+router.post("/:postId/comments", requireAnyRole(["STUDENT", "ORGANISATION"]), createComment);
+router.delete("/:postId/comments/:commentId", requireAnyRole(["STUDENT", "ORGANISATION"]), deleteComment);
 
 export default router;

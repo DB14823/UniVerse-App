@@ -44,11 +44,11 @@ UniVerse is a university events management app where:
 - Use camera to scan student QR codes
 - Mark tickets as "used" to prevent duplicate entry
 
-### 6. Comments on Posts
-**Current gap:** Only likes exist - no way to comment.
-- Add Comment model to Prisma schema
-- Create comments API endpoints
-- Add comment input and display to posts
+### 6. Comments on Posts ✅ COMPLETED
+- Added Comment model to Prisma schema
+- Created comments API endpoints (GET, POST, DELETE)
+- Added comment input and display on post detail screen
+- Added comment count to PostCard and posts API
 
 ### 7. Event Categories/Tags
 **Current gap:** No way to categorise events (music, sports, academic, social).
@@ -123,28 +123,25 @@ UniVerse is a university events management app where:
 ## 📊 Database Schema Additions Needed
 
 ```prisma
-// Potential new models
+// Already implemented
 model Comment {
   id        String   @id @default(uuid())
   content   String
   createdAt DateTime @default(now())
   postId    String
   userId    String
-  post      Posts    @relation(...)
-  user      Student  @relation(...) // or Organisation
+  post      Posts    @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([userId])
 }
 
+// Potential new models
 model Follow {
   id          String   @id @default(uuid())
   followerId  String
   followingId String
   createdAt   DateTime @default(now())
-}
-
-model Category {
-  id    String   @id @default(uuid())
-  name  String   @unique
-  events Event[]
 }
 
 model Notification {
@@ -162,12 +159,12 @@ model Notification {
 
 ## 📋 Recommended Implementation Order
 
-1. **Event description field** (quick win, high visibility)
-2. **Ticket count for organisations** (critical for event management)
-3. **Date filtering improvements** (better UX)
-4. **Hashtag search** (partially implemented, easy to complete)
-5. **Event categories** (adds structure)
-6. **Comments on posts** (increases engagement)
+1. ~~Event description field~~ ✅
+2. ~~Ticket count for organisations~~ ✅
+3. ~~Date filtering improvements~~ ✅
+4. ~~Hashtag search~~ ✅
+5. ~~Event categories~~ ✅
+6. ~~Comments on posts~~ ✅
 7. **QR scanner for orgs** (completes ticket flow)
 8. **Notifications system** (significant work but high value)
 9. **Follow system** (social features)

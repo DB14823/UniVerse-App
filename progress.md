@@ -10,17 +10,17 @@
 ## Next Steps
 
 ### Short Term
-1. Implement comments on posts
-2. Add QR code scanner for organisations
+1. Add QR code scanner for organisations
 
 ### Medium Term
 1. Build notifications system
-2. Date filtering improvements (Today/This Week/This Month)
+2. Follow system for users and organisations
 
 ---
 
 ## Recently Completed
 
+- ✅ Comments on posts (backend + frontend, with comment counts)
 - ✅ Hashtag search endpoint (server-side filtering)
 - ✅ Event categories with picker and filter
 - ✅ Ticket counts for organisation events
@@ -57,6 +57,7 @@
 
 ### Social Features
 - Posts have likes (many-to-many via Like model)
+- Posts have comments (Comment model with author info)
 - Hashtags parsed from captions with regex, server-side search supported
 - Profile navigation respects viewer role
 

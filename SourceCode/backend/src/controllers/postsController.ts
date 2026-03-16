@@ -136,7 +136,7 @@ export const getAllPosts = async (req: Request, res: Response) => {
           },
         },
         _count: {
-          select: { likes: true },
+          select: { likes: true, comments: true },
         },
         likes: userId
           ? {
@@ -152,6 +152,7 @@ export const getAllPosts = async (req: Request, res: Response) => {
       ...post,
       User: buildPostUser(post),
       likeCount: post._count?.likes ?? 0,
+      commentCount: post._count?.comments ?? 0,
       likedByMe: Array.isArray(post.likes) && post.likes.length > 0,
       likes: undefined,
       _count: undefined,
@@ -196,7 +197,7 @@ export const getUserPosts = async (req: Request, res: Response) => {
           },
         },
         _count: {
-          select: { likes: true },
+          select: { likes: true, comments: true },
         },
       },
     });
@@ -205,6 +206,7 @@ export const getUserPosts = async (req: Request, res: Response) => {
       ...post,
       User: buildPostUser(post),
       likeCount: post._count?.likes ?? 0,
+      commentCount: post._count?.comments ?? 0,
       likes: undefined,
       _count: undefined,
     }));
@@ -244,7 +246,7 @@ export const getPostById = async (req: Request, res: Response) => {
           },
         },
         _count: {
-          select: { likes: true },
+          select: { likes: true, comments: true },
         },
         likes: userId
           ? {
@@ -264,6 +266,7 @@ export const getPostById = async (req: Request, res: Response) => {
       ...post,
       User: buildPostUser(post),
       likeCount: post._count?.likes ?? 0,
+      commentCount: post._count?.comments ?? 0,
       likedByMe: Array.isArray(post.likes) && post.likes.length > 0,
       likes: undefined,
       _count: undefined,
@@ -506,7 +509,7 @@ export const getPostsByHashtag = async (req: Request, res: Response) => {
           },
         },
         _count: {
-          select: { likes: true },
+          select: { likes: true, comments: true },
         },
         likes: userId
           ? {
@@ -522,6 +525,7 @@ export const getPostsByHashtag = async (req: Request, res: Response) => {
       ...post,
       User: buildPostUser(post),
       likeCount: post._count?.likes ?? 0,
+      commentCount: post._count?.comments ?? 0,
       likedByMe: Array.isArray(post.likes) && post.likes.length > 0,
       likes: undefined,
       _count: undefined,
@@ -530,6 +534,182 @@ export const getPostsByHashtag = async (req: Request, res: Response) => {
     return res.json({ posts: postsWithUser });
   } catch (error) {
     console.error("Error fetching posts by hashtag:", error);
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
+
+/**
+ * Helper to build comment author info
+ */
+const buildCommentUser = async (userId: string) => {
+  const student = await prisma.student.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      username: true,
+      name: true,
+      profileImageUrl: true,
+    },
+  });
+
+  if (student) {
+    return {
+      id: student.id,
+      username: student.username,
+      name: student.name,
+      role: "STUDENT" as const,
+      profileImageUrl: student.profileImageUrl,
+    };
+  }
+
+  const organisation = await prisma.organisation.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      name: true,
+      profileImageUrl: true,
+    },
+  });
+
+  if (organisation) {
+    return {
+      id: organisation.id,
+      username: organisation.name,
+      name: organisation.name,
+      role: "ORGANISATION" as const,
+      profileImageUrl: organisation.profileImageUrl,
+    };
+  }
+
+  return {
+    id: "",
+    username: "Unknown",
+    name: null,
+    role: "STUDENT" as const,
+    profileImageUrl: null,
+  };
+};
+
+/**
+ * GET COMMENTS FOR A POST
+ * Retrieves all comments for a specific post with author info
+ */
+export const getComments = async (req: Request, res: Response) => {
+  try {
+    const { postId } = req.params;
+
+    const comments = await prisma.comment.findMany({
+      where: { postId },
+      orderBy: { createdAt: "asc" },
+    });
+
+    // Build author info for each comment
+    const commentsWithAuthors = await Promise.all(
+      comments.map(async (comment) => ({
+        id: comment.id,
+        content: comment.content,
+        createdAt: comment.createdAt,
+        User: await buildCommentUser(comment.userId),
+      }))
+    );
+
+    return res.json({ comments: commentsWithAuthors });
+  } catch (error) {
+    console.error("Error fetching comments:", error);
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
+
+/**
+ * CREATE COMMENT
+ * Creates a new comment on a post
+ */
+export const createComment = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const { postId } = req.params;
+    const { content } = req.body;
+
+    if (!content || typeof content !== "string" || content.trim() === "") {
+      return res.status(400).json({ message: "Comment content is required" });
+    }
+
+    // Check if post exists
+    const post = await prisma.posts.findUnique({
+      where: { id: postId },
+    });
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    const comment = await prisma.comment.create({
+      data: {
+        content: content.trim(),
+        postId,
+        userId,
+      },
+    });
+
+    const author = await buildCommentUser(userId);
+
+    return res.status(201).json({
+      message: "Comment created successfully",
+      comment: {
+        id: comment.id,
+        content: comment.content,
+        createdAt: comment.createdAt,
+        User: author,
+      },
+    });
+  } catch (error) {
+    console.error("Error creating comment:", error);
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
+
+/**
+ * DELETE COMMENT
+ * Deletes a comment (only by the author)
+ */
+export const deleteComment = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const { postId, commentId } = req.params;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // Check if comment exists and belongs to user
+    const comment = await prisma.comment.findUnique({
+      where: { id: commentId },
+    });
+
+    if (!comment) {
+      return res.status(404).json({ message: "Comment not found" });
+    }
+
+    if (comment.postId !== postId) {
+      return res.status(400).json({ message: "Comment does not belong to this post" });
+    }
+
+    if (comment.userId !== userId) {
+      return res.status(403).json({ message: "Not authorized to delete this comment" });
+    }
+
+    await prisma.comment.delete({
+      where: { id: commentId },
+    });
+
+    return res.json({ message: "Comment deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting comment:", error);
     return res.status(500).json({ message: "Server error", error });
   }
 };

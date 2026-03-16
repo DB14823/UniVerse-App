@@ -176,6 +176,7 @@ export default function SocialFeed({
         caption: dbPost.caption,
         imageUri: dbPost.imageUrl || null,
         likeCount: typeof dbPost.likeCount === "number" ? dbPost.likeCount : 0,
+        commentCount: typeof dbPost.commentCount === "number" ? dbPost.commentCount : 0,
         liked: Boolean(dbPost.likedByMe),
         timestamp: new Date(dbPost.createdAt).getTime(),
       }));
@@ -208,12 +209,14 @@ export default function SocialFeed({
         caption={post.caption}
         liked={post.liked}
         likeCount={likeCounts[post.id] ?? (post as any).likeCount ?? 0}
+        commentCount={post.commentCount ?? 0}
         viewerRole={viewerRole}
         onToggleLike={handleToggleLike}
         onHashtagPress={handleHashtagPress}
+        onPress={() => router.push({ pathname: "/post/[postId]", params: { postId: post.id } } as any)}
       />
     </View>
-  ), [likeCounts, viewerRole, handleToggleLike, handleHashtagPress]);
+  ), [likeCounts, viewerRole, handleToggleLike, handleHashtagPress, router]);
 
   const keyExtractor = useCallback((item: (typeof posts)[number]) => item.id, []);
 
