@@ -2,7 +2,7 @@
 
 ## Current Status
 
-**Branch:** `Return_of_IOS_test`
+**Branch:** `main`
 **Last updated:** March 16, 2026
 
 ---
@@ -15,8 +15,7 @@
 
 ### Medium Term
 1. Build notifications system
-2. Event attendance tracking (show ticket counts for orgs)
-3. Date filtering improvements (Today/This Week/This Month)
+2. Date filtering improvements (Today/This Week/This Month)
 
 ---
 
@@ -24,6 +23,9 @@
 
 - ✅ Hashtag search endpoint (server-side filtering)
 - ✅ Event categories with picker and filter
+- ✅ Ticket counts for organisation events
+- ✅ Merged frontend into main repo (removed submodule)
+- ✅ Cleaned up project documentation
 
 ---
 
