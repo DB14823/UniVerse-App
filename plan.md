@@ -95,9 +95,13 @@ UniVerse is a university events management app where:
 - Show followed organisations' events prominently
 - Show followed users' posts in a prioritised feed
 
-### 12. Calendar Integration
-- Add "Add to Calendar" button on tickets
-- Export event to Apple/Google Calendar
+### 12. Calendar Integration ✅ COMPLETED
+- Added expo-calendar package for native calendar access
+- Created `lib/calendar.ts` utility with permission handling
+- "Add to Calendar" prompt after successful ticket booking
+- Creates calendar event with title, date, location, description
+- 2-hour event duration with 1-hour reminder
+- Works for both free and paid events
 
 ### 13. Event Sharing
 - Share event deep links
@@ -125,14 +129,17 @@ UniVerse is a university events management app where:
 
 ## 🐛 Bug Fixes / Polish
 
-| Issue | Location | Fix |
-|-------|----------|-----|
-| Notifications toggle non-functional | `profileStudentSettings.tsx` | Connect to notification preferences API |
-| Description not shown to students | `EventFeed.tsx` modal | Add description to modal display |
-| No loading state | Various | Add activity indicators during API calls |
-| Day filter doesn't reflect actual dates | `FilterBar.tsx` | Use date range filtering |
-| No pull-to-refresh | `createEvent.tsx` | Already has RefreshControl but does nothing useful |
-| Static map image can fail | Static map API | Add fallback to "Open in Maps" only |
+| Issue | Location | Fix | Status |
+|-------|----------|-----|--------|
+| EventFeed FilterBar overlap | `EventFeed.tsx` | Increased padding, fixed z-index stacking | ✅ |
+| Profile avatar glow clipping | `profileStudent.tsx`, `profileOrg.tsx` | Reduced avatar size (130px), adjusted shadow, added container padding | ✅ |
+| Create Event messy layout | `createEvent.tsx` | Vertical layout, left-aligned labels, dashed border image upload, full-width button | ✅ |
+| Notifications toggle non-functional | `profileStudentSettings.tsx` | Connect to notification preferences API | 🔴 |
+| Description not shown to students | `EventFeed.tsx` modal | Add description to modal display | 🔴 |
+| No loading state | Various | Add activity indicators during API calls | 🔴 |
+| Day filter doesn't reflect actual dates | `FilterBar.tsx` | Use date range filtering | ✅ |
+| No pull-to-refresh | `createEvent.tsx` | Already has RefreshControl but does nothing useful | 🔴 |
+| Static map image can fail | Static map API | Add fallback to "Open in Maps" only | 🔴 |
 
 ---
 
@@ -202,4 +209,6 @@ model Notification {
 8. ~~Follow system~~ ✅
 9. ~~Notifications system~~ ✅ (push notifications require paid Apple Developer account)
 10. ~~Stripe payment integration~~ ✅
-11. **Polish and remaining features**
+11. ~~Calendar integration~~ ✅
+12. ~~UI Polish (EventFeed, profiles, create event)~~ ✅
+13. **Remaining polish and features**

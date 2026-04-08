@@ -21,7 +21,6 @@ import { EventRecord, getEventsByOrganiser } from "../../lib/eventsApi";
 import { getStaticMapUrl } from "../../lib/staticMaps";
 import { followUser, unfollowUser, checkFollowing, getFollowCounts } from "../../lib/followApi";
 import { colours } from "../../lib/theme/colours";
-import { shadows } from "../../lib/theme/colours";
 
 export default function ProfileOrg() {
   const router = useRouter();
@@ -633,16 +632,20 @@ const styles = StyleSheet.create({
 
   scrollArea: { flex: 1, paddingHorizontal: 16 },
 
-  avatarWrap: { alignItems: "center", marginTop: 10, marginBottom: 16 },
+  avatarWrap: { alignItems: "center", marginTop: 10, marginBottom: 16, paddingHorizontal: 20, paddingVertical: 10 },
 
   avatarWithGlow: {
-    ...shadows.glow,
+    shadowColor: "#8B5CF6",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.35,
+    shadowRadius: 15,
+    elevation: 8,
     borderRadius: 999,
   },
 
   avatarCircle: {
-    width: 150,
-    height: 150,
+    width: 130,
+    height: 130,
     borderRadius: 999,
     backgroundColor: colours.surface,
     borderWidth: 2,
@@ -672,7 +675,11 @@ const styles = StyleSheet.create({
     borderColor: colours.border,
     padding: 16,
     alignItems: "center",
-    ...shadows.small,
+    shadowColor: "#8B5CF6",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
 
   statNumber: {

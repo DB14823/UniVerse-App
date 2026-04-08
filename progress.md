@@ -10,13 +10,18 @@
 ## Next Steps
 
 ### Short Term
-1. Test Stripe payment integration on device
-2. Polish remaining UI issues
+1. Test calendar integration on device
+2. Resolve iOS push notification entitlement/provisioning profile issue
+3. Implement remaining polish items from plan
 
 ---
 
 ## Recently Completed
 
+- ✅ UI Polish: EventFeed FilterBar overlap fix (proper spacing, z-index cleanup)
+- ✅ UI Polish: Profile avatar glow clipping fix (reduced size 150→130, adjusted shadow, added container padding)
+- ✅ UI Polish: Create Event screen overhaul (vertical layout, left-aligned labels, dashed border image upload, full-width button)
+- ✅ Calendar integration for event bookings (expo-calendar, adds events to device calendar after booking)
 - ✅ Event ticket capacity feature (organisers can set max tickets, students see remaining/fully booked)
 - ✅ Stripe PaymentSheet integration for paid events
 - ✅ Push notifications infrastructure (backend + frontend stubs)

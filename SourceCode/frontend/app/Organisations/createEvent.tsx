@@ -11,8 +11,12 @@ import {
   Image as RNImage,
   Alert,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import * as SecureStore from "expo-secure-store";
 import { colours } from "../../lib/theme/colours";
@@ -106,7 +110,12 @@ export default function AddEventOrg() {
 
       try {
         const storedLocation = await SecureStore.getItemAsync("orgLocation");
-        if (isActive && storedLocation && !locationTouched && !location.trim()) {
+        if (
+          isActive &&
+          storedLocation &&
+          !locationTouched &&
+          !location.trim()
+        ) {
           setLocation(storedLocation);
         }
 
@@ -139,7 +148,10 @@ export default function AddEventOrg() {
   const pickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert("Permission Required", "Please allow access to your photo library.");
+      Alert.alert(
+        "Permission Required",
+        "Please allow access to your photo library.",
+      );
       return;
     }
 
@@ -157,14 +169,17 @@ export default function AddEventOrg() {
 
   const handleConfirm = async () => {
     if (!canConfirm) {
-      Alert.alert("Missing fields", "Please fill in title, date, location and price.");
+      Alert.alert(
+        "Missing fields",
+        "Please fill in title, date, location and price.",
+      );
       return;
     }
 
     try {
       // Convert price string to number for Decimal type
       const priceString = normalizePrice(price);
-      const priceNumber = parseFloat(priceString.replace(/[^0-9.]/g, '')) || 0;
+      const priceNumber = parseFloat(priceString.replace(/[^0-9.]/g, "")) || 0;
 
       await createEvent({
         title: title.trim(),
@@ -178,7 +193,10 @@ export default function AddEventOrg() {
       });
 
       Alert.alert("Success", "Event created successfully!", [
-        { text: "OK", onPress: () => router.replace("/Organisations/createEvent") },
+        {
+          text: "OK",
+          onPress: () => router.replace("/Organisations/createEvent"),
+        },
       ]);
 
       setTitle("");
@@ -199,13 +217,13 @@ export default function AddEventOrg() {
       }
       Alert.alert(
         "Error",
-        error.message || "Failed to create event. Please try again."
+        error.message || "Failed to create event. Please try again.",
       );
     }
   };
 
   return (
-      <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       <ScrollView
         style={styles.scrollArea}
         contentContainerStyle={{ paddingTop: 12, paddingBottom: bottomPad }}
@@ -214,26 +232,46 @@ export default function AddEventOrg() {
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
       >
-
         <Text style={styles.pageTitle}>Create Event</Text>
-<Text style={styles.pageSubtitle}>
-  Fill in the details below to publish a new event.
-</Text>
+        <Text style={styles.pageSubtitle}>
+          Fill in the details below to publish a new event.
+        </Text>
         <View style={styles.card}>
+          {/* Image Upload */}
           <TouchableOpacity
-            style={styles.imageCard}
+            style={styles.imageUploadArea}
             onPress={pickImage}
             activeOpacity={0.9}
           >
             {imageUri ? (
               <RNImage source={{ uri: imageUri }} style={styles.image} />
             ) : (
-              <Text style={styles.imageText}>Add image</Text>
+              <View style={styles.imageUploadPlaceholder}>
+                <Ionicons
+                  name="image-outline"
+                  size={32}
+                  color={colours.textMuted}
+                />
+                <Text style={styles.imageUploadText}>Add Event Image</Text>
+              </View>
             )}
           </TouchableOpacity>
 
+          {/* Event Title */}
           <View style={styles.fieldWrap}>
-            <Text style={styles.fieldLabel}>Add Description</Text>
+            <Text style={styles.fieldLabel}>Event Title</Text>
+            <TextInput
+              style={styles.fieldInput}
+              value={title}
+              onChangeText={setTitle}
+              placeholder="Enter event name"
+              placeholderTextColor={colours.textMuted}
+            />
+          </View>
+
+          {/* Description */}
+          <View style={styles.fieldWrap}>
+            <Text style={styles.fieldLabel}>Description</Text>
             <TextInput
               style={styles.descriptionInput}
               value={description}
@@ -246,6 +284,7 @@ export default function AddEventOrg() {
             />
           </View>
 
+          {/* Category */}
           <View style={styles.fieldWrap}>
             <Text style={styles.fieldLabel}>Category</Text>
             <View style={styles.categoryRow}>
@@ -272,146 +311,144 @@ export default function AddEventOrg() {
             </View>
           </View>
 
-          <View style={styles.formRow}>
-            <View style={styles.colLeft}>
-              <TInput
-                label="Add Event title"
-                value={title}
-                onChangeText={setTitle}
-                placeholder="Event title"
+          {/* Date/Time */}
+          <View style={styles.fieldWrap}>
+            <Text style={styles.fieldLabel}>Date & Time</Text>
+            <TouchableOpacity
+              style={styles.dateInput}
+              onPress={() => setShowDatePicker(true)}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name="calendar-outline"
+                size={20}
+                color={colours.textSecondary}
+                style={{ marginRight: 10 }}
               />
-              <View style={styles.fieldWrap}>
-                <Text style={styles.fieldLabel}>Add Date</Text>
-                <TouchableOpacity
-                  style={styles.dateInput}
-                  onPress={() => setShowDatePicker(true)}
-                  activeOpacity={0.8}
-                >
-                  <Text
-                    style={[
-                      styles.dateInputText,
-                      !formattedDate && styles.datePlaceholder,
-                    ]}
-                  >
-                    {formattedDate || "Select date and time"}
-                  </Text>
-                </TouchableOpacity>
+              <Text
+                style={[
+                  styles.dateInputText,
+                  !formattedDate && styles.datePlaceholder,
+                ]}
+              >
+                {formattedDate || "Select date and time"}
+              </Text>
+            </TouchableOpacity>
 
-                {showDatePicker && (
-                  <DateTimePicker
-                    value={eventDate ?? new Date()}
-                    mode="datetime"
-                    display={Platform.OS === "ios" ? "spinner" : "default"}
-                    onChange={(event, selectedDate) => {
-                      if (Platform.OS !== "ios") {
-                        setShowDatePicker(false);
-                      }
+            {showDatePicker && (
+              <DateTimePicker
+                value={eventDate ?? new Date()}
+                mode="datetime"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                onChange={(event, selectedDate) => {
+                  if (Platform.OS !== "ios") {
+                    setShowDatePicker(false);
+                  }
 
-                      if (selectedDate) {
-                        setEventDate(selectedDate);
-                      }
-                    }}
-                  />
-                )}
-
-                {Platform.OS === "ios" && showDatePicker && (
-                  <TouchableOpacity
-                    style={styles.dateDoneBtn}
-                    onPress={() => setShowDatePicker(false)}
-                    activeOpacity={0.85}
-                  >
-                    <Text style={styles.dateDoneText}>Done</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            </View>
-
-            <View style={styles.colRight}>
-              <TInput
-                label="Add Location"
-                value={location}
-                onChangeText={(value) => {
-                  setLocationTouched(true);
-                  setLocation(value);
+                  if (selectedDate) {
+                    setEventDate(selectedDate);
+                  }
                 }}
-                placeholder="e.g. Student Union"
               />
+            )}
+
+            {Platform.OS === "ios" && showDatePicker && (
               <TouchableOpacity
-                style={styles.locationHintBtn}
-                onPress={async () => {
-                  try {
-                    const storedLocation = await SecureStore.getItemAsync(
-                      "orgLocation"
-                    );
-                    const user = await getCurrentUser();
-                    const nextLocation =
-                      storedLocation ||
-                      (user?.role === "ORGANISATION" ? user.location : null);
-
-                    if (nextLocation) {
-                      setLocationTouched(true);
-                      setLocation(nextLocation);
-                    }
-                  } catch {}
-                }}
+                style={styles.dateDoneBtn}
+                onPress={() => setShowDatePicker(false)}
                 activeOpacity={0.85}
               >
-                <Text style={styles.locationHintText}>Use org location</Text>
+                <Text style={styles.dateDoneText}>Done</Text>
               </TouchableOpacity>
-              <TInput
-                label="Add Price"
-                value={price}
-                onChangeText={(value) => setPrice(formatPriceDisplay(value))}
-                onBlur={() => setPrice(normalizePrice(price))}
-                placeholder="e.g. £10.00"
-                keyboardType="decimal-pad"
-              />
-              <TInput
-                label="Ticket Capacity (optional)"
-                value={capacity}
-                onChangeText={setCapacity}
-                placeholder="Leave empty for unlimited"
-                keyboardType="numeric"
-              />
-            </View>
+            )}
           </View>
 
+          {/* Location */}
+          <View style={styles.fieldWrap}>
+            <Text style={styles.fieldLabel}>Location</Text>
+            <TextInput
+              style={styles.fieldInput}
+              value={location}
+              onChangeText={(value) => {
+                setLocationTouched(true);
+                setLocation(value);
+              }}
+              placeholder="e.g. Student Union"
+              placeholderTextColor={colours.textMuted}
+            />
+            <TouchableOpacity
+              style={styles.locationHintBtn}
+              onPress={async () => {
+                try {
+                  const storedLocation =
+                    await SecureStore.getItemAsync("orgLocation");
+                  const user = await getCurrentUser();
+                  const nextLocation =
+                    storedLocation ||
+                    (user?.role === "ORGANISATION" ? user.location : null);
+
+                  if (nextLocation) {
+                    setLocationTouched(true);
+                    setLocation(nextLocation);
+                  }
+                } catch {}
+              }}
+              activeOpacity={0.85}
+            >
+              <Ionicons
+                name="location-outline"
+                size={14}
+                color={colours.textSecondary}
+                style={{ marginRight: 4 }}
+              />
+              <Text style={styles.locationHintText}>
+                Use organisation location
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Price */}
+          <View style={styles.fieldWrap}>
+            <Text style={styles.fieldLabel}>Price</Text>
+            <TextInput
+              style={styles.fieldInput}
+              value={price}
+              onChangeText={(value) => setPrice(formatPriceDisplay(value))}
+              onBlur={() => setPrice(normalizePrice(price))}
+              placeholder="e.g. £10.00"
+              placeholderTextColor={colours.textMuted}
+              keyboardType="decimal-pad"
+            />
+          </View>
+
+          {/* Capacity */}
+          <View style={styles.fieldWrap}>
+            <Text style={styles.fieldLabel}>Ticket Capacity (Optional)</Text>
+            <TextInput
+              style={styles.fieldInput}
+              value={capacity}
+              onChangeText={setCapacity}
+              placeholder="Leave empty for unlimited tickets"
+              placeholderTextColor={colours.textMuted}
+              keyboardType="numeric"
+            />
+          </View>
+
+          {/* Confirm Button */}
           <TouchableOpacity
-            style={[styles.confirmBtn, !canConfirm && styles.confirmBtnDisabled]}
+            style={[
+              styles.confirmBtn,
+              !canConfirm && styles.confirmBtnDisabled,
+            ]}
             onPress={handleConfirm}
             activeOpacity={0.85}
             disabled={!canConfirm}
           >
-            <Text style={styles.confirmText}>Confirm</Text>
+            <Text style={styles.confirmText}>Create Event</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
-  );
-}
-
-function TInput(props: {
-  label: string;
-  value: string;
-  onChangeText: (v: string) => void;
-  onBlur?: () => void;
-  placeholder: string;
-  keyboardType?: "default" | "email-address" | "numeric" | "decimal-pad";
-}) {
-  return (
-    <View style={styles.fieldWrap}>
-      <Text style={styles.fieldLabel}>{props.label}</Text>
-      <TextInput
-        style={styles.fieldInput}
-        value={props.value}
-        onChangeText={props.onChangeText}
-        onBlur={props.onBlur}
-        placeholder={props.placeholder}
-        placeholderTextColor={colours.textMuted}
-        autoCapitalize="none"
-        keyboardType={props.keyboardType ?? "default"}
-      />
-    </View>
   );
 }
 
@@ -421,14 +458,143 @@ const styles = StyleSheet.create({
     backgroundColor: colours.background,
   },
 
-  dateInput: {
-    height: 44,
-    borderRadius: 12,
-    paddingHorizontal: 12,
+  scrollArea: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+
+  pageTitle: {
+    fontSize: 26,
+    fontWeight: "900",
+    color: colours.textPrimary,
+    marginBottom: 4,
+    marginTop: 6,
+  },
+
+  pageSubtitle: {
+    fontSize: 14,
+    color: colours.textMuted,
+    marginBottom: 16,
+  },
+
+  card: {
+    borderRadius: 24,
+    padding: 16,
+    backgroundColor: colours.surface,
     borderWidth: 1,
     borderColor: colours.border,
-    backgroundColor: colours.glass,
+    shadowColor: "#000",
+    shadowOpacity: Platform.OS === "ios" ? 0.14 : 0.34,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 10,
+    elevation: 6,
+  },
+
+  imageUploadArea: {
+    height: 180,
+    borderRadius: 18,
+    backgroundColor: colours.surfaceElevated,
+    borderWidth: 2,
+    borderStyle: "dashed",
+    borderColor: colours.border,
     justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+    marginBottom: 16,
+  },
+
+  imageUploadPlaceholder: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  imageUploadText: {
+    color: colours.textMuted,
+    fontSize: 16,
+    fontWeight: "700",
+    marginTop: 8,
+  },
+
+  image: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
+
+  fieldWrap: {
+    marginBottom: 14,
+  },
+
+  fieldLabel: {
+    color: colours.textPrimary,
+    fontSize: 15,
+    fontWeight: "800",
+    marginBottom: 8,
+  },
+
+  fieldInput: {
+    backgroundColor: colours.surfaceElevated,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    color: colours.textPrimary,
+    fontSize: 15,
+    borderWidth: 1,
+    borderColor: colours.border,
+  },
+
+  descriptionInput: {
+    backgroundColor: colours.surfaceElevated,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    color: colours.textPrimary,
+    fontSize: 15,
+    borderWidth: 1,
+    borderColor: colours.border,
+    minHeight: 100,
+    textAlignVertical: "top",
+  },
+
+  categoryRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+
+  categoryChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: colours.surfaceElevated,
+    borderWidth: 1,
+    borderColor: colours.border,
+  },
+
+  categoryChipActive: {
+    backgroundColor: colours.primary,
+    borderColor: colours.primary,
+  },
+
+  categoryChipText: {
+    color: colours.textSecondary,
+    fontSize: 13,
+    fontWeight: "700",
+  },
+
+  categoryChipTextActive: {
+    color: colours.textPrimary,
+  },
+
+  dateInput: {
+    height: 48,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: colours.border,
+    backgroundColor: colours.surfaceElevated,
+    flexDirection: "row",
+    alignItems: "center",
   },
 
   dateInputText: {
@@ -456,233 +622,41 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    gap: 12,
-    paddingTop: 8,
-    paddingBottom: 8,
-  },
-
-  searchWrap: {
-    flex: 1,
-    height: 44,
-    borderRadius: 999,
-    backgroundColor: colours.glass,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 14,
-    justifyContent: "space-between",
-    borderWidth: 1,
-    borderColor: colours.border,
-  },
-  searchInput: {
-    flex: 1,
-    color: colours.textPrimary,
-    fontSize: 15,
-    paddingRight: 10,
-  },
-  searchIcon: {
-    color: colours.textSecondary,
-    fontSize: 18,
-    marginLeft: 8,
-  },
-
-  profileBtn: {
-    width: 64,
-    height: 44,
-    borderRadius: 999,
-    backgroundColor: colours.glass,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: colours.border,
-  },
-  profileCircle: {
-    width: 22,
-    height: 22,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.35)",
-    marginBottom: 1,
-  },
-  profileLabel: {
-    color: colours.textSecondary,
-    fontSize: 11,
-    fontWeight: "800",
-    marginTop: 1,
-  },
-
-  scrollArea: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-
   locationHintBtn: {
-    alignSelf: "flex-start",
-    marginTop: -6,
-    marginBottom: 10,
-    paddingHorizontal: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 6,
+    paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 999,
+    backgroundColor: colours.glass,
     borderWidth: 1,
     borderColor: colours.border,
-    backgroundColor: colours.surface,
+    alignSelf: "flex-start",
   },
 
   locationHintText: {
     color: colours.textSecondary,
     fontSize: 12,
-    fontWeight: "700",
-  },
-
-  card: {
-    borderRadius: 24,
-    padding: 14,
-    backgroundColor: colours.surface,
-    borderWidth: 1,
-    borderColor: colours.border,
-    shadowColor: "#000",
-    shadowOpacity: Platform.OS === "ios" ? 0.14 : 0.34,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 10,
-    elevation: 6,
-  },
-
-  imageCard: {
-    height: 210,
-    borderRadius: 22,
-    backgroundColor: colours.success,
-    justifyContent: "center",
-    alignItems: "center",
-    overflow: "hidden",
-    marginBottom: 14,
-  },
-  image: {
-    width: "100%",
-    height: "100%",
-    resizeMode: "cover",
-  },
-  imageText: {
-    color: "rgba(0,0,0,0.55)",
-    fontSize: 18,
-    fontWeight: "900",
-  },
-
-  formRow: {
-    flexDirection: "row",
-    gap: 14,
-    justifyContent: "space-between",
-    marginBottom: 14,
-  },
-
-  colLeft: {
-    flex: 1,
-  },
-  colRight: {
-    flex: 1,
-  },
-
-  fieldWrap: {
-    marginBottom: 10,
-  },
-
-  fieldLabel: {
-    color: colours.textPrimary,
-    fontSize: 18,
-    fontWeight: "900",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-
-  fieldInput: {
-    backgroundColor: colours.surfaceElevated,
-    borderRadius: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    color: colours.textPrimary,
-    fontSize: 15,
-    borderWidth: 1,
-    borderColor: colours.border,
-  },
-
-  descriptionInput: {
-    backgroundColor: colours.surfaceElevated,
-    borderRadius: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    color: colours.textPrimary,
-    fontSize: 15,
-    borderWidth: 1,
-    borderColor: colours.border,
-    minHeight: 80,
-  },
-
-  categoryRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    justifyContent: "center",
-  },
-
-  categoryChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 999,
-    backgroundColor: colours.surfaceElevated,
-    borderWidth: 1,
-    borderColor: colours.border,
-  },
-
-  categoryChipActive: {
-    backgroundColor: colours.primary,
-    borderColor: colours.primary,
-  },
-
-  categoryChipText: {
-    color: colours.textSecondary,
-    fontSize: 13,
-    fontWeight: "700",
-  },
-
-  categoryChipTextActive: {
-    color: colours.textPrimary,
+    fontWeight: "600",
   },
 
   confirmBtn: {
-    alignSelf: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 26,
-    borderRadius: 999,
+    paddingVertical: 14,
+    borderRadius: 12,
     backgroundColor: colours.primary,
-    borderWidth: 1,
-    borderColor: colours.border,
-    shadowColor: "#000",
-    shadowOpacity: Platform.OS === "ios" ? 0.16 : 0.35,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 8,
-    elevation: 6,
-    marginTop: 4,
+    alignItems: "center",
+    marginTop: 8,
+    marginBottom: 4,
   },
+
   confirmBtnDisabled: {
     opacity: 0.5,
   },
+
   confirmText: {
     color: colours.textPrimary,
     fontSize: 16,
-    fontWeight: "900",
+    fontWeight: "800",
   },
-  pageTitle: {
-  fontSize: 26,
-  fontWeight: "900",
-  color: colours.textPrimary,
-  marginBottom: 4,
-  marginTop: 6,
-},
-
-pageSubtitle: {
-  fontSize: 14,
-  color: colours.textMuted,
-  marginBottom: 16,
-},
 });
