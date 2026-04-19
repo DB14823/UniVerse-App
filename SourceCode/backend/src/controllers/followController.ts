@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../utils/prisma";
+import { sendNotificationToUser } from "../services/notifications";
 
 /**
  * FOLLOW A USER OR ORGANISATION
@@ -61,6 +62,34 @@ export const followUser = async (req: Request, res: Response) => {
         followingType: targetRole,
       },
     });
+
+    // Notify the followed user
+    try {
+      let followerName = "Someone";
+      if (userRole.toUpperCase() === "STUDENT") {
+        const student = await prisma.student.findUnique({
+          where: { id: userId },
+          select: { username: true, name: true },
+        });
+        followerName = student?.username || student?.name || followerName;
+      } else {
+        const org = await prisma.organisation.findUnique({
+          where: { id: userId },
+          select: { name: true },
+        });
+        followerName = org?.name || followerName;
+      }
+      await sendNotificationToUser(
+        targetId,
+        targetRole,
+        "NEW_FOLLOWER",
+        `${followerName} followed you`,
+        "You have a new follower!",
+        { followerId: userId },
+      );
+    } catch (notifError) {
+      console.error("Error sending follow notification:", notifError);
+    }
 
     return res.status(201).json({ message: "Followed successfully" });
   } catch (error) {
@@ -164,7 +193,7 @@ export const getFollowers = async (req: Request, res: Response) => {
           role: follow.followerType,
           followedAt: follow.createdAt,
         };
-      })
+      }),
     );
 
     // Filter out nulls
@@ -229,7 +258,7 @@ export const getFollowing = async (req: Request, res: Response) => {
           role: follow.followingType,
           followedAt: follow.createdAt,
         };
-      })
+      }),
     );
 
     // Filter out nulls

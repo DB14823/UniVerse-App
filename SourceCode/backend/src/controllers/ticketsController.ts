@@ -53,12 +53,16 @@ export const createTicket = async (req: Request, res: Response) => {
       // Verify the payment succeeded
       const verification = await verifyPaymentIntent(paymentIntentId);
       if (!verification.succeeded) {
-        return res.status(400).json({ message: "Payment has not been completed" });
+        return res
+          .status(400)
+          .json({ message: "Payment has not been completed" });
       }
 
       // Verify the payment is for this event
       if (verification.eventId !== eventId) {
-        return res.status(400).json({ message: "Payment is for a different event" });
+        return res
+          .status(400)
+          .json({ message: "Payment is for a different event" });
       }
     }
 
@@ -78,16 +82,26 @@ export const createTicket = async (req: Request, res: Response) => {
       },
     });
 
-    // Send ticket confirmation notification
+    // Notify student of ticket confirmation + org of new booking
     try {
-      await sendNotificationToUser(
-        userId,
-        "STUDENT",
-        "TICKET_CONFIRMED",
-        "Ticket Confirmed!",
-        `Your ticket for "${event.title}" has been booked.`,
-        { eventId, ticketId: ticket.id }
-      );
+      await Promise.all([
+        sendNotificationToUser(
+          userId,
+          "STUDENT",
+          "TICKET_CONFIRMED",
+          "Ticket Confirmed!",
+          `Your ticket for "${event.title}" has been booked.`,
+          { eventId, ticketId: ticket.id },
+        ),
+        sendNotificationToUser(
+          event.organiserId,
+          "ORGANISATION",
+          "TICKET_CONFIRMED",
+          "New ticket booked",
+          `A student just booked a ticket for "${event.title}".`,
+          { eventId, ticketId: ticket.id },
+        ),
+      ]);
     } catch (notifError) {
       console.error("Error sending ticket notification:", notifError);
     }
@@ -206,7 +220,9 @@ export const validateTicket = async (req: Request, res: Response) => {
     const role = req.user?.role;
 
     if (!userId || role?.toUpperCase() !== "ORGANISATION") {
-      return res.status(403).json({ message: "Forbidden - Organisation access required" });
+      return res
+        .status(403)
+        .json({ message: "Forbidden - Organisation access required" });
     }
 
     const { ticketId, eventId } = req.body;
@@ -231,7 +247,9 @@ export const validateTicket = async (req: Request, res: Response) => {
 
     // Verify this organisation owns the event
     if (ticket.event.organiserId !== userId) {
-      return res.status(403).json({ message: "This ticket is not for your event" });
+      return res
+        .status(403)
+        .json({ message: "This ticket is not for your event" });
     }
 
     // If eventId provided, verify ticket matches the specific event
@@ -265,7 +283,11 @@ export const validateTicket = async (req: Request, res: Response) => {
         id: updated.id,
         used: updated.used,
         usedAt: updated.usedAt,
-        event: { title: ticket.event.title, date: ticket.event.date, location: ticket.event.location },
+        event: {
+          title: ticket.event.title,
+          date: ticket.event.date,
+          location: ticket.event.location,
+        },
         student: ticket.student,
       },
     });

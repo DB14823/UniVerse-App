@@ -48,6 +48,18 @@ model Event {
   eventImageUrl      String?
   organiser          Organisation @relation(fields: [organiserId], references: [id], onDelete: Cascade)
   tickets            Ticket[]
+  reminders          EventReminder[]
+}
+
+model EventReminder {
+  id           String   @id @default(uuid())
+  eventId      String
+  reminderType String   // "ONE_DAY" | "ONE_HOUR"
+  sentAt       DateTime @default(now())
+  event        Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, reminderType])
+  @@index([eventId])
 }
 
 model Posts {

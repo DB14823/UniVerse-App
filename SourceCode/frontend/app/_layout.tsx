@@ -2,12 +2,24 @@ import { Stack } from "expo-router";
 import { PostsProvider } from "../contexts/PostsContext";
 import { TicketsProvider } from "../contexts/TicketsContext";
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Image, StyleSheet, View, Easing, Dimensions } from "react-native";
+import {
+  Animated,
+  Image,
+  StyleSheet,
+  View,
+  Easing,
+  Dimensions,
+} from "react-native";
 import * as SplashScreen from "expo-splash-screen";
 import { StripeProvider } from "@stripe/stripe-react-native";
+import {
+  registerForPushNotifications,
+  setupNotificationListeners,
+} from "../lib/notifications";
 
-// Stripe publishable key - safe to expose in frontend
-const STRIPE_PUBLISHABLE_KEY = "pk_test_51TBdQvAgJTtyyhMfekHL463sc5RPWH3Fwog929u0oBgDM4S3tgkJjBIqFteVkukRaVDwvk3llEk78cmmiPWLocb3001Tsdihhd"; // Replace with your Stripe publishable key
+const STRIPE_PUBLISHABLE_KEY =
+  "pk_test_51TBdQvAgJTtyyhMfekHL463sc5RPWH3Fwog929u0oBgDM4S3tgkJjBIqFteVkukRaVDwvk3llEk78cmmiPWLocb3001Tsdihhd";
+const APPLE_MERCHANT_ID = "merchant.uk.co.dylanbennett.universe";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -17,7 +29,15 @@ const { width, height } = Dimensions.get("window");
 const STAR_COUNT = 10;
 
 // Simplified static star component
-function Star({ left, size, opacity }: { left: number; size: number; opacity: number }) {
+function Star({
+  left,
+  size,
+  opacity,
+}: {
+  left: number;
+  size: number;
+  opacity: number;
+}) {
   return (
     <View
       style={[
@@ -48,13 +68,13 @@ export default function RootLayout() {
       left: Math.random() * width,
       size: 1 + Math.random() * 2.2,
       opacity: 0.25 + Math.random() * 0.45,
-    }))
+    })),
   ).current;
 
   useEffect(() => {
     // Simplified progress animation - faster startup
     Animated.timing(progressAnim, {
-      toValue: 0.60,
+      toValue: 0.6,
       duration: 400,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: false,
@@ -75,7 +95,7 @@ export default function RootLayout() {
           easing: Easing.inOut(Easing.ease),
           useNativeDriver: true,
         }),
-      ])
+      ]),
     ).start();
 
     return () => {
@@ -87,7 +107,6 @@ export default function RootLayout() {
   useEffect(() => {
     const prepare = async () => {
       try {
-        // Reduced artificial delay for faster startup
         await new Promise((resolve) => setTimeout(resolve, 600));
       } finally {
         setAppReady(true);
@@ -95,6 +114,13 @@ export default function RootLayout() {
     };
 
     prepare();
+  }, []);
+
+  useEffect(() => {
+    registerForPushNotifications().catch((err) =>
+      console.error("Push registration error:", err),
+    );
+    return setupNotificationListeners();
   }, []);
 
   useEffect(() => {
@@ -138,7 +164,10 @@ export default function RootLayout() {
 
   return (
     <View style={{ flex: 1 }}>
-      <StripeProvider publishableKey={STRIPE_PUBLISHABLE_KEY}>
+      <StripeProvider
+        publishableKey={STRIPE_PUBLISHABLE_KEY}
+        merchantIdentifier={APPLE_MERCHANT_ID}
+      >
         <TicketsProvider>
           <PostsProvider>
             <Stack screenOptions={{ headerShown: false }} />

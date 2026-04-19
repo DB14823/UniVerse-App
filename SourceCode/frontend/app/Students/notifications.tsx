@@ -9,7 +9,10 @@ import {
   Image,
   ActivityIndicator,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -25,6 +28,9 @@ const NOTIFICATION_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   POST_COMMENT: "chatbubble",
   TICKET_CONFIRMED: "ticket",
   NEW_EVENT: "calendar",
+  NEW_FOLLOWER: "person-add",
+  EVENT_REMINDER_ONE_DAY: "alarm",
+  EVENT_REMINDER_ONE_HOUR: "alarm",
 };
 
 export default function NotificationsScreen() {
@@ -66,8 +72,8 @@ export default function NotificationsScreen() {
         await markNotificationAsRead(notification.id);
         setNotifications((prev) =>
           prev.map((n) =>
-            n.id === notification.id ? { ...n, read: true } : n
-          )
+            n.id === notification.id ? { ...n, read: true } : n,
+          ),
         );
         setUnreadCount((prev) => Math.max(0, prev - 1));
       } catch (error) {
@@ -127,10 +133,10 @@ export default function NotificationsScreen() {
       item.type === "POST_LIKE"
         ? colours.accent
         : item.type === "NEW_EVENT"
-        ? colours.primary
-        : item.type === "TICKET_CONFIRMED"
-        ? colours.success
-        : colours.secondary;
+          ? colours.primary
+          : item.type === "TICKET_CONFIRMED"
+            ? colours.success
+            : colours.secondary;
 
     return (
       <TouchableOpacity
@@ -138,7 +144,9 @@ export default function NotificationsScreen() {
         onPress={() => handleNotificationPress(item)}
         activeOpacity={0.7}
       >
-        <View style={[styles.iconContainer, { backgroundColor: iconColor + "20" }]}>
+        <View
+          style={[styles.iconContainer, { backgroundColor: iconColor + "20" }]}
+        >
           <Ionicons name={iconName} size={22} color={iconColor} />
         </View>
 
@@ -149,7 +157,9 @@ export default function NotificationsScreen() {
           <Text style={styles.notificationBody} numberOfLines={2}>
             {item.body}
           </Text>
-          <Text style={styles.notificationTime}>{formatTime(item.createdAt)}</Text>
+          <Text style={styles.notificationTime}>
+            {formatTime(item.createdAt)}
+          </Text>
         </View>
 
         {!item.read && <View style={styles.unreadDot} />}
@@ -195,7 +205,11 @@ export default function NotificationsScreen() {
         </View>
       ) : notifications.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Ionicons name="notifications-off-outline" size={64} color={colours.textMuted} />
+          <Ionicons
+            name="notifications-off-outline"
+            size={64}
+            color={colours.textMuted}
+          />
           <Text style={styles.emptyText}>No notifications yet</Text>
           <Text style={styles.emptySubtext}>
             When you get notifications, they'll appear here

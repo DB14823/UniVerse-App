@@ -2,6 +2,7 @@
   "name": "universe",
   "private": true,
   "scripts": {
+    "postinstall": "patch-package",
     "env:init": "bash scripts/init-env.sh",
     "install:all": "npm run env:init && cd SourceCode/frontend && npm install && cd ../backend && npm install",
     "frontend": "cd SourceCode/frontend && npx expo start",
@@ -11,10 +12,13 @@
   },
   "devDependencies": {
     "concurrently": "^9.0.0",
+    "patch-package": "^8.0.1",
     "prisma": "5.14.0"
   },
   "dependencies": {
-    "expo-haptics": "^55.0.8",
-    "@prisma/client": "5.14.0"
+    "@prisma/client": "5.14.0",
+    "expo": "^55.0.15",
+    "expo-dev-client": "~55.0.27",
+    "expo-haptics": "^55.0.8"
   }
 }

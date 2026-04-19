@@ -21,7 +21,7 @@ export const sendPushNotification = async (
   token: string,
   title: string,
   body: string,
-  data?: Record<string, any>
+  data?: Record<string, any>,
 ): Promise<boolean> => {
   try {
     const message: PushMessage = {
@@ -57,9 +57,7 @@ export const sendPushNotification = async (
 /**
  * Get all push tokens for a user
  */
-export const getUserPushTokens = async (
-  userId: string
-): Promise<string[]> => {
+export const getUserPushTokens = async (userId: string): Promise<string[]> => {
   const tokens = await prisma.pushToken.findMany({
     where: { userId },
     select: { token: true },
@@ -74,12 +72,14 @@ export const getUserPushTokens = async (
  * - Sends push notifications to all user's devices
  */
 export const sendNotificationToUser = async (
+  // logged below
+
   userId: string,
   userRole: string,
   type: string,
   title: string,
   body: string,
-  data?: Record<string, any>
+  data?: Record<string, any>,
 ): Promise<void> => {
   try {
     // Check if user has notifications enabled
@@ -125,7 +125,7 @@ export const sendNotificationToUser = async (
 
     // Send push notifications to all devices
     await Promise.all(
-      tokens.map((token) => sendPushNotification(token, title, body, data))
+      tokens.map((token) => sendPushNotification(token, title, body, data)),
     );
   } catch (error) {
     console.error("Error sending notification to user:", error);
@@ -141,7 +141,7 @@ export const sendNotificationToUsers = async (
   type: string,
   title: string,
   body: string,
-  data?: Record<string, any>
+  data?: Record<string, any>,
 ): Promise<void> => {
   try {
     // Filter users who have notifications enabled
@@ -197,7 +197,7 @@ export const sendNotificationToUsers = async (
 
     // Send push notifications
     await Promise.all(
-      tokens.map((t) => sendPushNotification(t.token, title, body, data))
+      tokens.map((t) => sendPushNotification(t.token, title, body, data)),
     );
   } catch (error) {
     console.error("Error sending notifications to users:", error);
@@ -211,7 +211,7 @@ export const notifyFollowersOfNewEvent = async (
   organiserId: string,
   organiserName: string,
   eventId: string,
-  eventTitle: string
+  eventTitle: string,
 ): Promise<void> => {
   try {
     // Get all followers
@@ -232,7 +232,7 @@ export const notifyFollowersOfNewEvent = async (
       "NEW_EVENT",
       `New event from ${organiserName}`,
       `${eventTitle} - Check it out!`,
-      { eventId, organiserId }
+      { eventId, organiserId },
     );
   } catch (error) {
     console.error("Error notifying followers of new event:", error);

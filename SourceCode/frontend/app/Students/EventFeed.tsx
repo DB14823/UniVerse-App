@@ -28,6 +28,8 @@ import { useTickets, Ticket } from "../../contexts/TicketsContext";
 import { Alert } from "react-native";
 import {
   useStripe,
+  usePlatformPay,
+  PlatformPay,
   initPaymentSheet,
   presentPaymentSheet,
 } from "@stripe/stripe-react-native";
@@ -62,7 +64,6 @@ type EventItem = {
 };
 
 export default function EventFeed() {
-
   const [selectedDay, setSelectedDay] = useState("All");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
@@ -83,6 +84,15 @@ export default function EventFeed() {
   const [categoryItems, setCategoryItems] = useState(EVENT_CATEGORIES);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const { handleNextAction } = useStripe();
+  const { isPlatformPaySupported, confirmPlatformPayPayment } =
+    usePlatformPay();
+  const [applePaySupported, setApplePaySupported] = useState(false);
+
+  useEffect(() => {
+    isPlatformPaySupported({ applePay: {} })
+      .then(setApplePaySupported)
+      .catch(() => {});
+  }, [isPlatformPaySupported]);
 
   const fetchEvents = useCallback(async (category?: string) => {
     const data = await getEvents(category);
@@ -97,7 +107,7 @@ export default function EventFeed() {
       setRefreshing(false);
     }
   }, [fetchEvents, selectedCategory]);
-   useTabRefresh(handleRefresh);
+  useTabRefresh(handleRefresh);
 
   useEffect(() => {
     fetchEvents(selectedCategory).catch((error) => {
@@ -130,10 +140,13 @@ export default function EventFeed() {
           : dateLabelDate;
 
         // Format price for display - convert Decimal to currency string
-        const priceNum = typeof event.price === 'number' ? event.price : parseFloat(String(event.price)) || 0;
-        const formattedPrice = new Intl.NumberFormat('en-GB', {
-          style: 'currency',
-          currency: 'GBP',
+        const priceNum =
+          typeof event.price === "number"
+            ? event.price
+            : parseFloat(String(event.price)) || 0;
+        const formattedPrice = new Intl.NumberFormat("en-GB", {
+          style: "currency",
+          currency: "GBP",
         }).format(priceNum);
 
         return {
@@ -153,12 +166,16 @@ export default function EventFeed() {
           ticketCount: event.ticketCount,
         };
       }),
-    [events]
+    [events],
   );
 
- const visibleEvents = useMemo(() => {
+  const visibleEvents = useMemo(() => {
     const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
     const endOfToday = new Date(startOfToday);
     endOfToday.setHours(23, 59, 59, 999);
 
@@ -169,7 +186,15 @@ export default function EventFeed() {
     endOfWeek.setHours(23, 59, 59, 999);
 
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    const endOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+      999,
+    );
 
     return eventItems.filter((e) => {
       let matchesDate = true;
@@ -195,7 +220,7 @@ export default function EventFeed() {
 
   const mapUrl = selectedEvent
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-        selectedEvent.mapLocation
+        selectedEvent.mapLocation,
       )}`
     : "";
 
@@ -218,66 +243,75 @@ export default function EventFeed() {
     };
   }, [selectedEvent]);
 
-  const renderEvent = useCallback(({ item: ev, index }: { item: EventItem; index: number }) => (
-    <Animated.View entering={FadeInDown.delay(index * 50).springify()}>
-      <Pressable
-        style={styles.eventCard}
-        onPress={() => setSelectedEvent(ev)}
-      >
-        <View style={styles.eventImage}>
-          {ev.eventImageUrl ? (
-            <Image
-              source={{ uri: ev.eventImageUrl }}
-              style={styles.eventImageFill}
-            />
-          ) : (
-            <View style={styles.eventImagePlaceholder}>
-              <Ionicons name="image-outline" size={40} color={colours.textMuted} />
-            </View>
-          )}
-          <View style={styles.categoryBadge}>
-            <Text style={styles.categoryBadgeText}>{ev.category}</Text>
-          </View>
-        </View>
-
-        <View style={styles.eventInfoRow}>
-          <View style={styles.eventLeft}>
-            <Text style={styles.eventTitle} numberOfLines={1}>
-              {ev.title}
-            </Text>
-            <Text style={styles.eventMeta} numberOfLines={1}>
-              {ev.dateLabelDate}
-            </Text>
-            {ev.dateLabelTime ? (
-              <Text style={styles.eventMeta} numberOfLines={1}>
-                {ev.dateLabelTime}
-              </Text>
-            ) : null}
-          </View>
-
-          <View style={styles.eventRight}>
-            <Text style={styles.eventMetaRight} numberOfLines={1}>
-              {ev.price}
-            </Text>
-            {ev.capacity !== null && ev.capacity !== undefined && (
-              <Text style={styles.capacityText} numberOfLines={1}>
-                {ev.ticketCount ?? 0}/{ev.capacity} tickets
-              </Text>
+  const renderEvent = useCallback(
+    ({ item: ev, index }: { item: EventItem; index: number }) => (
+      <Animated.View entering={FadeInDown.delay(index * 50).springify()}>
+        <Pressable
+          style={styles.eventCard}
+          onPress={() => setSelectedEvent(ev)}
+        >
+          <View style={styles.eventImage}>
+            {ev.eventImageUrl ? (
+              <Image
+                source={{ uri: ev.eventImageUrl }}
+                style={styles.eventImageFill}
+              />
+            ) : (
+              <View style={styles.eventImagePlaceholder}>
+                <Ionicons
+                  name="image-outline"
+                  size={40}
+                  color={colours.textMuted}
+                />
+              </View>
             )}
+            <View style={styles.categoryBadge}>
+              <Text style={styles.categoryBadgeText}>{ev.category}</Text>
+            </View>
           </View>
-        </View>
-      </Pressable>
-    </Animated.View>
-  ), []);
+
+          <View style={styles.eventInfoRow}>
+            <View style={styles.eventLeft}>
+              <Text style={styles.eventTitle} numberOfLines={1}>
+                {ev.title}
+              </Text>
+              <Text style={styles.eventMeta} numberOfLines={1}>
+                {ev.dateLabelDate}
+              </Text>
+              {ev.dateLabelTime ? (
+                <Text style={styles.eventMeta} numberOfLines={1}>
+                  {ev.dateLabelTime}
+                </Text>
+              ) : null}
+            </View>
+
+            <View style={styles.eventRight}>
+              <Text style={styles.eventMetaRight} numberOfLines={1}>
+                {ev.price}
+              </Text>
+              {ev.capacity !== null && ev.capacity !== undefined && (
+                <Text style={styles.capacityText} numberOfLines={1}>
+                  {ev.ticketCount ?? 0}/{ev.capacity} tickets
+                </Text>
+              )}
+            </View>
+          </View>
+        </Pressable>
+      </Animated.View>
+    ),
+    [],
+  );
 
   const keyExtractor = useCallback((item: EventItem) => item.id, []);
 
-  const renderSectionTitle = useMemo(() => (
-    <Text style={styles.sectionTitle}>
-      {selectedDay === "All" ? "All events" : selectedDay}
-    </Text>
-  ), [selectedDay]);
-
+  const renderSectionTitle = useMemo(
+    () => (
+      <Text style={styles.sectionTitle}>
+        {selectedDay === "All" ? "All events" : selectedDay}
+      </Text>
+    ),
+    [selectedDay],
+  );
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
@@ -318,9 +352,15 @@ export default function EventFeed() {
         ListHeaderComponent={renderSectionTitle}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Ionicons name="calendar-outline" size={48} color={colours.textMuted} />
+            <Ionicons
+              name="calendar-outline"
+              size={48}
+              color={colours.textMuted}
+            />
             <Text style={styles.emptyStateText}>No events found</Text>
-            <Text style={styles.emptyStateSubtext}>Try adjusting your filters</Text>
+            <Text style={styles.emptyStateSubtext}>
+              Try adjusting your filters
+            </Text>
           </View>
         }
         removeClippedSubviews={true}
@@ -353,25 +393,32 @@ export default function EventFeed() {
 
             <Text style={styles.modalMeta}>{selectedEvent?.dateLabel}</Text>
             {selectedEvent?.description ? (
-              <Text style={styles.modalDescription}>{selectedEvent.description}</Text>
+              <Text style={styles.modalDescription}>
+                {selectedEvent.description}
+              </Text>
             ) : null}
             <Text style={styles.modalMeta}>{selectedEvent?.location}</Text>
             <Text style={styles.modalMeta}>{selectedEvent?.price}</Text>
-            {selectedEvent?.capacity !== null && selectedEvent?.capacity !== undefined && (
-              <Text style={styles.modalMeta}>
-                {(selectedEvent.ticketCount ?? 0)}/{selectedEvent.capacity} tickets booked
-              </Text>
-            )}
+            {selectedEvent?.capacity !== null &&
+              selectedEvent?.capacity !== undefined && (
+                <Text style={styles.modalMeta}>
+                  {selectedEvent.ticketCount ?? 0}/{selectedEvent.capacity}{" "}
+                  tickets booked
+                </Text>
+              )}
 
             <View style={styles.mapFrame}>
-  {modalMapUrl ? (
-    <Image source={{ uri: modalMapUrl }} style={styles.mapWebView} />
-  ) : (
-    <View style={styles.mapFallback}>
-      <Text style={styles.eventImageText}>Loading map...</Text>
-    </View>
-  )}
-</View>
+              {modalMapUrl ? (
+                <Image
+                  source={{ uri: modalMapUrl }}
+                  style={styles.mapWebView}
+                />
+              ) : (
+                <View style={styles.mapFallback}>
+                  <Text style={styles.eventImageText}>Loading map...</Text>
+                </View>
+              )}
+            </View>
 
             {selectedEvent && (
               <>
@@ -388,18 +435,21 @@ export default function EventFeed() {
                     styles.openMapBtn,
                     {
                       marginTop: 8,
-                      backgroundColor: selectedEvent?.capacity !== null &&
+                      backgroundColor:
+                        selectedEvent?.capacity !== null &&
                         selectedEvent?.capacity !== undefined &&
-                        (selectedEvent.ticketCount ?? 0) >= selectedEvent.capacity
-                        ? colours.textMuted
-                        : colours.primary,
+                        (selectedEvent.ticketCount ?? 0) >=
+                          selectedEvent.capacity
+                          ? colours.textMuted
+                          : colours.primary,
                     },
                   ]}
                   disabled={
                     isProcessingPayment ||
                     (selectedEvent?.capacity !== null &&
                       selectedEvent?.capacity !== undefined &&
-                      (selectedEvent.ticketCount ?? 0) >= selectedEvent.capacity)
+                      (selectedEvent.ticketCount ?? 0) >=
+                        selectedEvent.capacity)
                   }
                   onPress={async () => {
                     if (!selectedEvent || isProcessingPayment) return;
@@ -410,62 +460,120 @@ export default function EventFeed() {
                       selectedEvent.capacity !== undefined &&
                       (selectedEvent.ticketCount ?? 0) >= selectedEvent.capacity
                     ) {
-                      Alert.alert("Fully booked", "This event has reached its ticket capacity.");
+                      Alert.alert(
+                        "Fully booked",
+                        "This event has reached its ticket capacity.",
+                      );
                       return;
                     }
 
-                    const already = tickets.find((t) => t.id === selectedEvent.id);
+                    const already = tickets.find(
+                      (t) => t.id === selectedEvent.id,
+                    );
                     if (already) {
-                      Alert.alert("Already booked", "You already have a ticket for this event.");
+                      Alert.alert(
+                        "Already booked",
+                        "You already have a ticket for this event.",
+                      );
                       return;
                     }
 
                     // Parse price to determine if payment is needed
-                    const priceNum = parseFloat(selectedEvent.price.replace(/[^0-9.-]+/g, "")) || 0;
+                    const priceNum =
+                      parseFloat(
+                        selectedEvent.price.replace(/[^0-9.-]+/g, ""),
+                      ) || 0;
 
                     try {
                       setIsProcessingPayment(true);
 
                       if (priceNum > 0) {
-                        // Paid event - need to process payment
+                        // Paid event
                         try {
-                          // 1. Create payment intent
-                          const { clientSecret, paymentIntentId } = await createPaymentIntent(selectedEvent.id);
+                          const { clientSecret, paymentIntentId } =
+                            await createPaymentIntent(selectedEvent.id);
 
-                          // 2. Initialize payment sheet
-                          const { error: initError } = await initPaymentSheet({
-                            merchantDisplayName: "UniVerse",
-                            paymentIntentClientSecret: clientSecret,
-                            // No Apple Pay or Google Pay as per requirements
-                          });
+                          if (applePaySupported) {
+                            // Native Apple Pay sheet
+                            const { error: confirmError } =
+                              await confirmPlatformPayPayment(clientSecret, {
+                                applePay: {
+                                  cartItems: [
+                                    {
+                                      label: selectedEvent.title,
+                                      amount: priceNum.toFixed(2),
+                                      paymentType:
+                                        PlatformPay.PaymentType.Immediate,
+                                    },
+                                  ],
+                                  merchantCountryCode: "GB",
+                                  currencyCode: "GBP",
+                                },
+                              });
 
-                          if (initError) {
-                            Alert.alert("Payment Setup Error", initError.message || "Failed to initialize payment.");
-                            return;
-                          }
-
-                          // 3. Present payment sheet
-                          const { error: presentError } = await presentPaymentSheet();
-
-                          if (presentError) {
-                            if (presentError.code !== "Canceled") {
-                              Alert.alert("Payment Failed", presentError.message || "Payment was not completed.");
+                            if (confirmError) {
+                              if (confirmError.code !== "Canceled") {
+                                Alert.alert(
+                                  "Payment Failed",
+                                  confirmError.message ||
+                                    "Payment was not completed.",
+                                );
+                              }
+                              return;
                             }
-                            return;
+                          } else {
+                            // Fallback: Stripe PaymentSheet (Android / simulator)
+                            const { error: initError } = await initPaymentSheet(
+                              {
+                                merchantDisplayName: "UniVerse",
+                                paymentIntentClientSecret: clientSecret,
+                              },
+                            );
+
+                            if (initError) {
+                              Alert.alert(
+                                "Payment Setup Error",
+                                initError.message ||
+                                  "Failed to initialize payment.",
+                              );
+                              return;
+                            }
+
+                            const { error: presentError } =
+                              await presentPaymentSheet();
+
+                            if (presentError) {
+                              if (presentError.code !== "Canceled") {
+                                Alert.alert(
+                                  "Payment Failed",
+                                  presentError.message ||
+                                    "Payment was not completed.",
+                                );
+                              }
+                              return;
+                            }
                           }
 
-                          // 4. Payment successful - create ticket with payment ID
-                          const response = await purchaseTicket(selectedEvent.id, paymentIntentId);
+                          // Payment complete — create ticket
+                          const response = await purchaseTicket(
+                            selectedEvent.id,
+                            paymentIntentId,
+                          );
 
                           const ticket: Ticket = {
                             id: selectedEvent.id,
                             ticketId: response.ticketId,
-                            day: selectedEvent.date.toLocaleDateString("en-US", { weekday: "long" }),
+                            day: selectedEvent.date.toLocaleDateString(
+                              "en-US",
+                              { weekday: "long" },
+                            ),
                             date: selectedEvent.date.toISOString(),
                             title: selectedEvent.title,
                             dateLabel: selectedEvent.date.toLocaleString(),
-                            dateLabelDate: selectedEvent.date.toLocaleDateString(),
-                            dateLabelTime: selectedEvent.date.toLocaleTimeString(),
+                            dateLabelDate:
+                              selectedEvent.date.toLocaleDateString(),
+                            dateLabelTime:
+                              selectedEvent.date.toLocaleTimeString(),
                             location: selectedEvent.location,
                             price: selectedEvent.price,
                             eventImageUrl: selectedEvent.eventImageUrl,
@@ -487,9 +595,13 @@ export default function EventFeed() {
                                     location: selectedEvent.location,
                                     description: selectedEvent.description,
                                   };
-                                  const eventId = await addEventToCalendar(calendarEvent);
+                                  const eventId =
+                                    await addEventToCalendar(calendarEvent);
                                   if (eventId) {
-                                    Alert.alert("Event Added", "This event has been added to your calendar.");
+                                    Alert.alert(
+                                      "Event Added",
+                                      "This event has been added to your calendar.",
+                                    );
                                   }
                                   setSelectedEvent(null);
                                 },
@@ -499,24 +611,35 @@ export default function EventFeed() {
                                 style: "cancel",
                                 onPress: () => setSelectedEvent(null),
                               },
-                            ]
+                            ],
                           );
                         } catch (paymentError: any) {
-                          Alert.alert("Payment Error", paymentError.message || "Failed to process payment.");
+                          Alert.alert(
+                            "Payment Error",
+                            paymentError.message ||
+                              "Failed to process payment.",
+                          );
                         }
                       } else {
                         // Free event - direct booking
                         try {
-                          const response = await purchaseTicket(selectedEvent.id);
+                          const response = await purchaseTicket(
+                            selectedEvent.id,
+                          );
                           const ticket: Ticket = {
                             id: selectedEvent.id,
                             ticketId: response.ticketId,
-                            day: selectedEvent.date.toLocaleDateString("en-US", { weekday: "long" }),
+                            day: selectedEvent.date.toLocaleDateString(
+                              "en-US",
+                              { weekday: "long" },
+                            ),
                             date: selectedEvent.date.toISOString(),
                             title: selectedEvent.title,
                             dateLabel: selectedEvent.date.toLocaleString(),
-                            dateLabelDate: selectedEvent.date.toLocaleDateString(),
-                            dateLabelTime: selectedEvent.date.toLocaleTimeString(),
+                            dateLabelDate:
+                              selectedEvent.date.toLocaleDateString(),
+                            dateLabelTime:
+                              selectedEvent.date.toLocaleTimeString(),
                             location: selectedEvent.location,
                             price: selectedEvent.price,
                             eventImageUrl: selectedEvent.eventImageUrl,
@@ -538,9 +661,13 @@ export default function EventFeed() {
                                     location: selectedEvent.location,
                                     description: selectedEvent.description,
                                   };
-                                  const eventId = await addEventToCalendar(calendarEvent);
+                                  const eventId =
+                                    await addEventToCalendar(calendarEvent);
                                   if (eventId) {
-                                    Alert.alert("Event Added", "This event has been added to your calendar.");
+                                    Alert.alert(
+                                      "Event Added",
+                                      "This event has been added to your calendar.",
+                                    );
                                   }
                                   setSelectedEvent(null);
                                 },
@@ -550,10 +677,13 @@ export default function EventFeed() {
                                 style: "cancel",
                                 onPress: () => setSelectedEvent(null),
                               },
-                            ]
+                            ],
                           );
                         } catch (error: any) {
-                          Alert.alert("Error", error.message || "Failed to book ticket.");
+                          Alert.alert(
+                            "Error",
+                            error.message || "Failed to book ticket.",
+                          );
                         }
                       }
                     } finally {
@@ -566,8 +696,8 @@ export default function EventFeed() {
                   ) : (
                     <Text style={[styles.openMapText, { color: "#fff" }]}>
                       {selectedEvent?.capacity !== null &&
-                        selectedEvent?.capacity !== undefined &&
-                        (selectedEvent.ticketCount ?? 0) >= selectedEvent.capacity
+                      selectedEvent?.capacity !== undefined &&
+                      (selectedEvent.ticketCount ?? 0) >= selectedEvent.capacity
                         ? "Fully booked"
                         : "Book ticket"}
                     </Text>
@@ -783,22 +913,22 @@ const styles = StyleSheet.create({
     color: colours.surface,
     fontWeight: "700",
   },
-   modalCloseButton: {
-  width: 36,
-  height: 36,
-  borderRadius: 18,
-  alignItems: "center",
-  justifyContent: "center",
-  backgroundColor: colours.primary,
-  borderWidth: 1,
-  borderColor: colours.border,
-},
+  modalCloseButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colours.primary,
+    borderWidth: 1,
+    borderColor: colours.border,
+  },
 
-modalCloseText: {
-  fontSize: 18,
-  fontWeight: "700",
-  color: colours.textPrimary,
-},
+  modalCloseText: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: colours.textPrimary,
+  },
 
   emptyState: {
     alignItems: "center",

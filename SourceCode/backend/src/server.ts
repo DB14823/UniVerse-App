@@ -9,6 +9,7 @@ import followRoutes from "./routes/follow";
 import notificationsRoutes from "./routes/notifications";
 import paymentsRoutes from "./routes/payments";
 import { globalErrorHandler, notFoundHandler } from "./middleware/errorHandler";
+import { startEventReminderJob } from "./jobs/eventReminders";
 
 /**
  * Loads variables from .env into process.env
@@ -27,7 +28,6 @@ const app = express();
  */
 app.use(cors());
 app.use(express.json({ limit: "10mb" })); // Increased limit for image uploads
-
 
 /**
  * Mount auth routes under /auth
@@ -95,4 +95,7 @@ app.use(globalErrorHandler);
  * Start server on PORT from env, else default 3001.
  */
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Backend running on port ${PORT}`);
+  startEventReminderJob();
+});

@@ -209,7 +209,10 @@ export const getNotificationSettings = async (req: Request, res: Response) => {
 /**
  * UPDATE NOTIFICATION SETTINGS
  */
-export const updateNotificationSettings = async (req: Request, res: Response) => {
+export const updateNotificationSettings = async (
+  req: Request,
+  res: Response,
+) => {
   try {
     const userId = req.user?.id;
     const userRole = req.user?.role;
@@ -220,7 +223,9 @@ export const updateNotificationSettings = async (req: Request, res: Response) =>
     }
 
     if (typeof notificationsEnabled !== "boolean") {
-      return res.status(400).json({ message: "notificationsEnabled must be a boolean" });
+      return res
+        .status(400)
+        .json({ message: "notificationsEnabled must be a boolean" });
     }
 
     if (userRole.toUpperCase() === "STUDENT") {

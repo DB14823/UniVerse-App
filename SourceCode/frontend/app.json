@@ -13,6 +13,11 @@
       "bundleIdentifier": "uk.co.dylanbennett.universe",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
+      },
+      "entitlements": {
+        "com.apple.developer.in-app-payments": [
+          "merchant.uk.co.dylanbennett.universe"
+        ]
       }
     },
     "android": {
@@ -46,19 +51,30 @@
         }
       ],
       "expo-secure-store",
+      "expo-notifications",
       "@react-native-community/datetimepicker",
       "expo-web-browser",
       [
         "@stripe/stripe-react-native",
         {
-          "merchantIdentifier": "",
+          "merchantIdentifier": "merchant.uk.co.dylanbennett.universe",
           "enableGooglePay": false
         }
-      ]
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "xcodeSettings": {
+              "SWIFT_STRICT_CONCURRENCY": "minimal"
+            }
+          }
+        }
+      ],
+      "./plugins/withSwiftConcurrency"
     ],
     "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
+      "typedRoutes": true
     },
     "extra": {
       "router": {},

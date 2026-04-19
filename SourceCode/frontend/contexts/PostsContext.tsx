@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import * as SecureStore from "expo-secure-store";
 import * as postsApi from "../lib/postsApi";
 import { useRouter } from "expo-router";
@@ -60,7 +66,8 @@ export function PostsProvider({ children }: { children: ReactNode }) {
         caption: dbPost.caption,
         imageUri: dbPost.imageUrl || null,
         likeCount: typeof dbPost.likeCount === "number" ? dbPost.likeCount : 0,
-        commentCount: typeof dbPost.commentCount === "number" ? dbPost.commentCount : 0,
+        commentCount:
+          typeof dbPost.commentCount === "number" ? dbPost.commentCount : 0,
         liked: Boolean(dbPost.likedByMe),
         timestamp: new Date(dbPost.createdAt).getTime(),
       }));
@@ -71,8 +78,9 @@ export function PostsProvider({ children }: { children: ReactNode }) {
         await SecureStore.deleteItemAsync("authToken");
         await SecureStore.deleteItemAsync("userRole");
         router.replace("/");
+      } else {
+        console.warn("Failed to load posts:", error?.message ?? error);
       }
-      throw error;
     } finally {
       setLoading(false);
     }
@@ -91,7 +99,8 @@ export function PostsProvider({ children }: { children: ReactNode }) {
         caption: dbPost.caption,
         imageUri: dbPost.imageUrl || null,
         likeCount: typeof dbPost.likeCount === "number" ? dbPost.likeCount : 0,
-        commentCount: typeof dbPost.commentCount === "number" ? dbPost.commentCount : 0,
+        commentCount:
+          typeof dbPost.commentCount === "number" ? dbPost.commentCount : 0,
         liked: Boolean(dbPost.likedByMe),
         timestamp: new Date(dbPost.createdAt).getTime(),
       };
@@ -119,30 +128,37 @@ export function PostsProvider({ children }: { children: ReactNode }) {
         optimisticLiked = nextLiked;
         optimisticLikeCount = nextCount;
         return { ...p, liked: nextLiked, likeCount: nextCount };
-      })
+      }),
     );
 
     try {
       const result: any = await postsApi.togglePostLike(id);
 
       const nextLiked =
-        typeof result?.likedByMe === "boolean" ? result.likedByMe : optimisticLiked;
+        typeof result?.likedByMe === "boolean"
+          ? result.likedByMe
+          : optimisticLiked;
       const nextCount =
-        typeof result?.likeCount === "number" ? result.likeCount : optimisticLikeCount;
+        typeof result?.likeCount === "number"
+          ? result.likeCount
+          : optimisticLikeCount;
 
       setPosts((prev) =>
         prev.map((p) =>
-          p.id === id ? { ...p, liked: nextLiked, likeCount: nextCount } : p
-        )
+          p.id === id ? { ...p, liked: nextLiked, likeCount: nextCount } : p,
+        ),
       );
     } catch (error: any) {
       setPosts((prev) =>
         prev.map((p) => {
           if (p.id !== id) return p;
           const rolledBackLiked = !optimisticLiked;
-          const rolledBackCount = Math.max(0, optimisticLikeCount + (rolledBackLiked ? 1 : -1));
+          const rolledBackCount = Math.max(
+            0,
+            optimisticLikeCount + (rolledBackLiked ? 1 : -1),
+          );
           return { ...p, liked: rolledBackLiked, likeCount: rolledBackCount };
-        })
+        }),
       );
 
       if (error instanceof AuthError) {
@@ -161,21 +177,33 @@ export function PostsProvider({ children }: { children: ReactNode }) {
   const incrementCommentCount = (postId: string) => {
     setPosts((prev) =>
       prev.map((p) =>
-        p.id === postId ? { ...p, commentCount: p.commentCount + 1 } : p
-      )
+        p.id === postId ? { ...p, commentCount: p.commentCount + 1 } : p,
+      ),
     );
   };
 
   const decrementCommentCount = (postId: string) => {
     setPosts((prev) =>
       prev.map((p) =>
-        p.id === postId ? { ...p, commentCount: Math.max(0, p.commentCount - 1) } : p
-      )
+        p.id === postId
+          ? { ...p, commentCount: Math.max(0, p.commentCount - 1) }
+          : p,
+      ),
     );
   };
 
   return (
-    <PostsContext.Provider value={{ posts, addPost, toggleLike, incrementCommentCount, decrementCommentCount, refreshPosts, loading }}>
+    <PostsContext.Provider
+      value={{
+        posts,
+        addPost,
+        toggleLike,
+        incrementCommentCount,
+        decrementCommentCount,
+        refreshPosts,
+        loading,
+      }}
+    >
       {children}
     </PostsContext.Provider>
   );

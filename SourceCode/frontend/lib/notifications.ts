@@ -1,53 +1,107 @@
-// Stub notifications module - push notifications require paid Apple Developer account
-// This provides no-op implementations to prevent build errors
+import * as Notifications from "expo-notifications";
+import * as SecureStore from "expo-secure-store";
+import { Platform } from "react-native";
+import { registerPushToken, unregisterPushToken } from "./notificationsApi";
 
-/**
- * Register for push notifications (stub - does nothing)
- */
+const EXPO_PROJECT_ID = "b565b408-436a-4f93-88e1-78a4db6fad03";
+const PUSH_TOKEN_KEY = "push_token";
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
+
 export async function registerForPushNotifications(): Promise<string | null> {
-  console.log("Push notifications disabled - requires paid Apple Developer account");
-  return null;
+  if (Platform.OS === "android") {
+    await Notifications.setNotificationChannelAsync("default", {
+      name: "default",
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+    });
+  }
+
+  const { status: existingStatus } = await Notifications.getPermissionsAsync();
+  let finalStatus = existingStatus;
+
+  if (existingStatus !== "granted") {
+    const { status } = await Notifications.requestPermissionsAsync();
+    finalStatus = status;
+  }
+
+  if (finalStatus !== "granted") {
+    return null;
+  }
+
+  const tokenData = await Notifications.getExpoPushTokenAsync({
+    projectId: EXPO_PROJECT_ID,
+  });
+  const token = tokenData.data;
+
+  const cached = await SecureStore.getItemAsync(PUSH_TOKEN_KEY);
+  if (cached !== token) {
+    await registerPushToken(token);
+    await SecureStore.setItemAsync(PUSH_TOKEN_KEY, token);
+  }
+
+  return token;
 }
 
-/**
- * Unregister from push notifications (stub)
- */
 export async function unregisterForPushNotifications(): Promise<void> {
-  // No-op
+  const token = await SecureStore.getItemAsync(PUSH_TOKEN_KEY);
+  if (token) {
+    await unregisterPushToken(token);
+    await SecureStore.deleteItemAsync(PUSH_TOKEN_KEY);
+  }
 }
 
-/**
- * Set up notification listeners (stub)
- */
 export function setupNotificationListeners(
-  onNotification?: (notification: any) => void,
-  onNotificationResponse?: (response: any) => void
+  onNotification?: (notification: Notifications.Notification) => void,
+  onNotificationResponse?: (
+    response: Notifications.NotificationResponse,
+  ) => void,
 ): () => void {
-  // Return empty cleanup function
-  return () => {};
+  const receivedSub = Notifications.addNotificationReceivedListener(
+    (notification) => {
+      onNotification?.(notification);
+    },
+  );
+
+  const responseSub = Notifications.addNotificationResponseReceivedListener(
+    (response) => {
+      onNotificationResponse?.(response);
+    },
+  );
+
+  return () => {
+    receivedSub.remove();
+    responseSub.remove();
+  };
 }
 
-/**
- * Get the current push token (stub)
- */
 export function getCurrentPushToken(): string | null {
+  // SecureStore is async; callers that need the token should await registerForPushNotifications
   return null;
 }
 
-/**
- * Clear notification badge (stub)
- */
 export async function clearNotificationBadge(): Promise<void> {
-  // No-op
+  await Notifications.setBadgeCountAsync(0);
 }
 
-/**
- * Schedule a local notification (stub)
- */
 export async function scheduleLocalNotification(
   title: string,
   body: string,
-  seconds: number = 2
+  seconds: number = 2,
 ): Promise<void> {
-  console.log(`[Local Notification] ${title}: ${body}`);
+  await Notifications.scheduleNotificationAsync({
+    content: { title, body },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+      seconds,
+    },
+  });
 }

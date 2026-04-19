@@ -91,7 +91,7 @@ export async function checkFollowing(targetId: string): Promise<boolean> {
  * Get follower and following counts for a user
  */
 export async function getFollowCounts(
-  userId: string
+  userId: string,
 ): Promise<{ followersCount: number; followingCount: number }> {
   const token = await getAuthToken();
   if (!token) {
