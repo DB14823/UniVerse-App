@@ -16,6 +16,7 @@
       },
       "entitlements": {
         "com.apple.developer.in-app-payments": [
+          "merchant.uk.co.dylanbennett.universe",
           "merchant.uk.co.dylanbennett.universe"
         ]
       }
@@ -81,6 +82,12 @@
       "eas": {
         "projectId": "b565b408-436a-4f93-88e1-78a4db6fad03"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/b565b408-436a-4f93-88e1-78a4db6fad03"
     }
   }
 }

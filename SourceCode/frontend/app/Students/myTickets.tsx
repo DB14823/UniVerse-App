@@ -13,7 +13,10 @@ import {
   Alert,
   TextInput,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colours } from "../../lib/theme/colours";
 import { useTickets, Ticket } from "../../contexts/TicketsContext";
@@ -31,7 +34,9 @@ export default function MyTickets() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [fullscreenQR, setFullscreenQR] = useState(false);
-  const [fullscreenQRTicket, setFullscreenQRTicket] = useState<Ticket | null>(null);
+  const [fullscreenQRTicket, setFullscreenQRTicket] = useState<Ticket | null>(
+    null,
+  );
   const [deletingTicketId, setDeletingTicketId] = useState<string | null>(null);
 
   const handleRefresh = useCallback(async () => {
@@ -61,12 +66,15 @@ export default function MyTickets() {
               await refreshTickets();
             } catch (err) {
               console.warn("Failed to delete ticket", err);
-              Alert.alert("Error", "Failed to delete ticket. Please try again.");
+              Alert.alert(
+                "Error",
+                "Failed to delete ticket. Please try again.",
+              );
             }
             setDeletingTicketId(null);
           },
         },
-      ]
+      ],
     );
   };
 
@@ -87,8 +95,10 @@ export default function MyTickets() {
   // Further filter by search query
   const filteredTickets = getFilteredByTab(
     tickets.filter((t) =>
-      searchQuery ? t.title.toLowerCase().includes(searchQuery.toLowerCase()) : true
-    )
+      searchQuery
+        ? t.title.toLowerCase().includes(searchQuery.toLowerCase())
+        : true,
+    ),
   );
 
   const bottomPad = 100 + Math.max(insets.bottom, 0);
@@ -99,20 +109,35 @@ export default function MyTickets() {
     const showDeleteButton = isUsed;
 
     return (
-      <Animated.View key={t.id} entering={FadeInDown.delay(index * 50).springify()}>
+      <Animated.View
+        key={t.id}
+        entering={FadeInDown.delay(index * 50).springify()}
+      >
         <Pressable
-          style={[styles.ticketItem, (isUsed || isPast) && styles.usedTicketItem]}
+          style={[
+            styles.ticketItem,
+            (isUsed || isPast) && styles.usedTicketItem,
+          ]}
           onPress={() => setSelectedTicket(t)}
         >
           {t.eventImageUrl && (
             <Image
               source={{ uri: t.eventImageUrl }}
-              style={[styles.eventImage, (isUsed || isPast) && styles.usedEventImage]}
+              style={[
+                styles.eventImage,
+                (isUsed || isPast) && styles.usedEventImage,
+              ]}
             />
           )}
           <View style={styles.ticketContent}>
             <View style={styles.ticketHeader}>
-              <Text style={[styles.ticketTitle, (isUsed || isPast) && styles.usedTicketTitle]} numberOfLines={2}>
+              <Text
+                style={[
+                  styles.ticketTitle,
+                  (isUsed || isPast) && styles.usedTicketTitle,
+                ]}
+                numberOfLines={2}
+              >
                 {t.title}
               </Text>
               {isUsed && (
@@ -126,13 +151,28 @@ export default function MyTickets() {
                 </View>
               )}
             </View>
-            <Text style={[styles.ticketMeta, (isUsed || isPast) && styles.usedTicketMeta]}>
+            <Text
+              style={[
+                styles.ticketMeta,
+                (isUsed || isPast) && styles.usedTicketMeta,
+              ]}
+            >
               {`${t.dateLabelDate} ${t.dateLabelTime}`}
             </Text>
-            <Text style={[styles.ticketMeta, (isUsed || isPast) && styles.usedTicketMeta]}>
+            <Text
+              style={[
+                styles.ticketMeta,
+                (isUsed || isPast) && styles.usedTicketMeta,
+              ]}
+            >
               {`Location: ${t.location}`}
             </Text>
-            <Text style={[styles.ticketMeta, (isUsed || isPast) && styles.usedTicketMeta]}>
+            <Text
+              style={[
+                styles.ticketMeta,
+                (isUsed || isPast) && styles.usedTicketMeta,
+              ]}
+            >
               {`Price: ${t.price}`}
             </Text>
             {isUsed && t.usedAt && (
@@ -172,7 +212,9 @@ export default function MyTickets() {
       <View style={styles.emptyState}>
         <Ionicons name="ticket-outline" size={48} color={colours.textMuted} />
         <Text style={styles.emptyStateText}>{message}</Text>
-        <Text style={styles.emptyStateSubtext}>Browse events to get tickets!</Text>
+        <Text style={styles.emptyStateSubtext}>
+          Browse events to get tickets!
+        </Text>
       </View>
     );
   };
@@ -194,7 +236,12 @@ export default function MyTickets() {
             style={[styles.tab, activeTab === tab && styles.activeTab]}
             onPress={() => setActiveTab(tab)}
           >
-            <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === tab && styles.activeTabText,
+              ]}
+            >
               {tab}
             </Text>
           </Pressable>
@@ -225,7 +272,9 @@ export default function MyTickets() {
         }
       >
         {filteredTickets.length > 0
-          ? filteredTickets.map((ticket, index) => renderTicketCard(ticket, index))
+          ? filteredTickets.map((ticket, index) =>
+              renderTicketCard(ticket, index),
+            )
           : renderEmptyState()}
       </ScrollView>
 
@@ -260,23 +309,26 @@ export default function MyTickets() {
                 </Text>
                 {selectedTicket.usedAt && (
                   <Text style={styles.modalStatusSubtext}>
-                    Scanned on {new Date(selectedTicket.usedAt).toLocaleDateString()}
+                    Scanned on{" "}
+                    {new Date(selectedTicket.usedAt).toLocaleDateString()}
                   </Text>
                 )}
               </View>
             )}
 
-            {selectedTicket && !selectedTicket.used && new Date(selectedTicket.date) < new Date() && (
-              <View style={styles.modalStatusBanner}>
-                <Text style={styles.modalStatusIcon}>⏱</Text>
-                <Text style={styles.modalStatusText}>
-                  This event has passed
-                </Text>
-                <Text style={styles.modalStatusSubtext}>
-                  QR code is no longer valid
-                </Text>
-              </View>
-            )}
+            {selectedTicket &&
+              !selectedTicket.used &&
+              new Date(selectedTicket.date) < new Date() && (
+                <View style={styles.modalStatusBanner}>
+                  <Text style={styles.modalStatusIcon}>⏱</Text>
+                  <Text style={styles.modalStatusText}>
+                    This event has passed
+                  </Text>
+                  <Text style={styles.modalStatusSubtext}>
+                    QR code is no longer valid
+                  </Text>
+                </View>
+              )}
 
             {canShowQR(selectedTicket) && (
               <View style={styles.qrContainer}>
@@ -289,14 +341,18 @@ export default function MyTickets() {
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                   {({ pressed }) => (
-                    <Image
-                      source={{
-                        uri: `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(
-                          selectedTicket.ticketId
-                        )}&size=300x300`,
-                      }}
-                      style={[styles.qrCode, { opacity: pressed ? 0.8 : 1 }]}
-                    />
+                    <View
+                      style={[styles.qrWrap, { opacity: pressed ? 0.8 : 1 }]}
+                    >
+                      <Image
+                        source={{
+                          uri: `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(
+                            selectedTicket.ticketId,
+                          )}&size=300x300`,
+                        }}
+                        style={styles.qrCode}
+                      />
+                    </View>
                   )}
                 </Pressable>
                 <Text style={styles.qrHint}>Tap to enlarge</Text>
@@ -324,9 +380,12 @@ export default function MyTickets() {
           }}
         >
           <View style={styles.fullscreenCard}>
-            <Text style={styles.fullscreenTitle}>{fullscreenQRTicket?.title}</Text>
+            <Text style={styles.fullscreenTitle}>
+              {fullscreenQRTicket?.title}
+            </Text>
             <Text style={styles.fullscreenSubtitle}>
-              {fullscreenQRTicket?.dateLabelDate} • {fullscreenQRTicket?.location}
+              {fullscreenQRTicket?.dateLabelDate} •{" "}
+              {fullscreenQRTicket?.location}
             </Text>
 
             {fullscreenQRTicket && (
@@ -334,7 +393,7 @@ export default function MyTickets() {
                 <Image
                   source={{
                     uri: `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(
-                      fullscreenQRTicket.ticketId
+                      fullscreenQRTicket.ticketId,
                     )}&size=400x400`,
                   }}
                   style={styles.fullscreenQRCode}
@@ -624,12 +683,15 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
 
+  qrWrap: {
+    backgroundColor: "#fff",
+    padding: 16,
+    borderRadius: 16,
+  },
+
   qrCode: {
     width: 260,
     height: 260,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: colours.border,
   },
 
   qrHint: {

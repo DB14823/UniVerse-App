@@ -31,7 +31,9 @@ function parseCoordinates(value: string): Coordinates | null {
   };
 }
 
-async function geocodeLocation(location: string): Promise<Coordinates | null> {
+export async function geocodeLocation(
+  location: string,
+): Promise<Coordinates | null> {
   const cached = coordinateCache.get(location);
 
   if (cached) {
@@ -52,7 +54,7 @@ async function geocodeLocation(location: string): Promise<Coordinates | null> {
           "User-Agent": "comp2003-app/1.0",
         },
         signal: controller.signal,
-      }
+      },
     );
   } catch (error) {
     return null;
@@ -92,7 +94,7 @@ async function geocodeLocation(location: string): Promise<Coordinates | null> {
 
 export async function getStaticMapUrl(
   location: string,
-  options: StaticMapOptions = {}
+  options: StaticMapOptions = {},
 ): Promise<string | null> {
   const trimmed = location.trim();
 
@@ -124,31 +126,34 @@ export async function getStaticMapUrl(
   // EXPO_PUBLIC_GOOGLE_MAPS_API_KEY the helper will always return a google URL.
   // Mapbox support is now entirely optional and only used if there is no google
   // key configured.
-const googleKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
-if (googleKey) {
-  const centre = `${coords.lat},${coords.lon}`;
+  const googleKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
+  if (googleKey) {
+    const centre = `${coords.lat},${coords.lon}`;
 
-  const params = new URLSearchParams({
-    center: centre,
-    zoom: String(zoom),
-    size: `${width}x${height}`,
-    scale: "2",
-    key: googleKey,
-  });
+    const params = new URLSearchParams({
+      center: centre,
+      zoom: String(zoom),
+      size: `${width}x${height}`,
+      scale: "2",
+      key: googleKey,
+    });
 
-  params.append("markers", `size:mid|color:0xC84C3A|${coords.lat},${coords.lon}`);
+    params.append(
+      "markers",
+      `size:mid|color:0xC84C3A|${coords.lat},${coords.lon}`,
+    );
 
-  params.append("style", "feature:poi|visibility:on");
-  params.append("style", "feature:transit|visibility:off");
-  params.append("style", "feature:road|element:labels|visibility:simplified");
-  params.append("style", "feature:water|color:0x1a2a44");
-  params.append("style", "feature:landscape|color:0xf4f6f8");
+    params.append("style", "feature:poi|visibility:on");
+    params.append("style", "feature:transit|visibility:off");
+    params.append("style", "feature:road|element:labels|visibility:simplified");
+    params.append("style", "feature:water|color:0x1a2a44");
+    params.append("style", "feature:landscape|color:0xf4f6f8");
 
-  const url = `https://maps.googleapis.com/maps/api/staticmap?${params.toString()}`;
+    const url = `https://maps.googleapis.com/maps/api/staticmap?${params.toString()}`;
 
-  urlCache.set(cacheKey, url);
-  return url;
-}
+    urlCache.set(cacheKey, url);
+    return url;
+  }
 
   // if no google key, fall back to Mapbox token if available (legacy behaviour)
   const mapboxToken = process.env.EXPO_PUBLIC_MAPBOX_TOKEN;

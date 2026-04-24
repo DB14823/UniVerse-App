@@ -9,7 +9,12 @@
       "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://universe-app-production.up.railway.app",
+        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyBX2ZiBgJyJBZvnm_RnhcXgEK6wPQlVsFA"
+      }
     },
     "production": {
       "autoIncrement": true

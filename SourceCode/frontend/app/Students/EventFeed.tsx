@@ -20,7 +20,8 @@ import { colours } from "../../lib/theme/colours";
 import { Spacing } from "../../lib/theme/spacing";
 import { useTabRefresh } from "../hooks/useTabRefresh";
 import { getEvents, EventRecord } from "../../lib/eventsApi";
-import { getStaticMapUrl } from "../../lib/staticMaps";
+import MapView, { Marker } from "react-native-maps";
+import { geocodeLocation } from "../../lib/staticMaps";
 import { purchaseTicket } from "../../lib/ticketsApi";
 import { createPaymentIntent } from "../../lib/paymentsApi";
 import { addEventToCalendar, CalendarEventData } from "../../lib/calendar";
@@ -74,7 +75,10 @@ export default function EventFeed() {
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
   const { tickets, addTicket } = useTickets();
-  const [modalMapUrl, setModalMapUrl] = useState<string | null>(null);
+  const [mapCoords, setMapCoords] = useState<{
+    lat: number;
+    lon: number;
+  } | null>(null);
   const [items, setItems] = useState([
     { label: "All Events", value: "All" },
     { label: "Today", value: "Today" },
@@ -219,22 +223,22 @@ export default function EventFeed() {
   }, [eventItems, selectedDay, searchQuery]);
 
   const mapUrl = selectedEvent
-    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-        selectedEvent.mapLocation,
-      )}`
+    ? Platform.OS === "ios"
+      ? `maps://?q=${encodeURIComponent(selectedEvent.mapLocation)}`
+      : `geo:0,0?q=${encodeURIComponent(selectedEvent.mapLocation)}`
     : "";
 
   useEffect(() => {
     let cancelled = false;
 
     if (!selectedEvent) {
-      setModalMapUrl(null);
+      setMapCoords(null);
       return;
     }
 
-    getStaticMapUrl(selectedEvent.mapLocation).then((url) => {
+    geocodeLocation(selectedEvent.mapLocation).then((coords) => {
       if (!cancelled) {
-        setModalMapUrl(url);
+        setMapCoords(coords);
       }
     });
 
@@ -408,14 +412,31 @@ export default function EventFeed() {
               )}
 
             <View style={styles.mapFrame}>
-              {modalMapUrl ? (
-                <Image
-                  source={{ uri: modalMapUrl }}
+              {mapCoords ? (
+                <MapView
                   style={styles.mapWebView}
-                />
+                  initialRegion={{
+                    latitude: mapCoords.lat,
+                    longitude: mapCoords.lon,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                  }}
+                  scrollEnabled={false}
+                  zoomEnabled={false}
+                  pitchEnabled={false}
+                  rotateEnabled={false}
+                >
+                  <Marker
+                    coordinate={{
+                      latitude: mapCoords.lat,
+                      longitude: mapCoords.lon,
+                    }}
+                    title={selectedEvent?.location}
+                  />
+                </MapView>
               ) : (
                 <View style={styles.mapFallback}>
-                  <Text style={styles.eventImageText}>Loading map...</Text>
+                  <ActivityIndicator size="small" color={colours.textMuted} />
                 </View>
               )}
             </View>

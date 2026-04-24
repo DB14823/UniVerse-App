@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
+  KeyboardAvoidingView,
   Alert,
   Platform,
 } from "react-native";
@@ -30,7 +31,7 @@ export default function CreatePost() {
     if (permissionResult.granted === false) {
       Alert.alert(
         "Permission Required",
-        "Please allow access to your photo library."
+        "Please allow access to your photo library.",
       );
       return;
     }
@@ -92,7 +93,7 @@ export default function CreatePost() {
     } catch (error: any) {
       Alert.alert(
         "Error",
-        error.message || "Failed to create post. Please try again."
+        error.message || "Failed to create post. Please try again.",
       );
     }
   };
@@ -111,66 +112,91 @@ export default function CreatePost() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView style={styles.content} contentContainerStyle={styles.contentInner}>
-        <View style={styles.imageSection}>
-          {imageUri ? (
-            <View style={styles.imagePreviewContainer}>
-              <Image source={{ uri: imageUri }} style={styles.imagePreview} />
-              <TouchableOpacity
-                style={styles.removeImageBtn}
-                onPress={() => setImageUri(null)}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.removeImageIcon}>×</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <View style={styles.imagePlaceholder}>
-              <Ionicons name="image-outline" size={48} color={colours.textMuted} />
-              <Text style={styles.placeholderText}>No image selected</Text>
-            </View>
-          )}
-        </View>
-
-        <View style={styles.buttonRow}>
-          <TouchableOpacity style={styles.imageBtn} onPress={pickImage} activeOpacity={0.8}>
-            <Ionicons name="images-outline" size={32} color={colours.secondary} />
-            <Text style={styles.imageBtnText}>Choose from Library</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.imageBtn} onPress={takePhoto} activeOpacity={0.8}>
-            <Ionicons name="camera" size={32} color={colours.primary} />
-            <Text style={styles.imageBtnText}>Take Photo</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.captionSection}>
-          <Text style={styles.label}>Caption</Text>
-          <TextInput
-            style={styles.captionInput}
-            placeholder="Write a caption..."
-            placeholderTextColor={colours.textMuted}
-            value={caption}
-            onChangeText={setCaption}
-            multiline
-            maxLength={500}
-            textAlignVertical="top"
-          />
-          <Text style={styles.charCount}>{caption.length}/500</Text>
-        </View>
-
-        <TouchableOpacity
-          style={[
-            styles.postBtn,
-            (!imageUri || !caption.trim()) && styles.postBtnDisabled,
-          ]}
-          onPress={handlePost}
-          activeOpacity={0.8}
-          disabled={!imageUri || !caption.trim()}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          style={styles.content}
+          contentContainerStyle={styles.contentInner}
+          keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.postBtnText}>Post</Text>
-        </TouchableOpacity>
-      </ScrollView>
+          <View style={styles.imageSection}>
+            {imageUri ? (
+              <View style={styles.imagePreviewContainer}>
+                <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+                <TouchableOpacity
+                  style={styles.removeImageBtn}
+                  onPress={() => setImageUri(null)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.removeImageIcon}>×</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.imagePlaceholder}>
+                <Ionicons
+                  name="image-outline"
+                  size={48}
+                  color={colours.textMuted}
+                />
+                <Text style={styles.placeholderText}>No image selected</Text>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.buttonRow}>
+            <TouchableOpacity
+              style={styles.imageBtn}
+              onPress={pickImage}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name="images-outline"
+                size={32}
+                color={colours.secondary}
+              />
+              <Text style={styles.imageBtnText}>Choose from Library</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.imageBtn}
+              onPress={takePhoto}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="camera" size={32} color={colours.primary} />
+              <Text style={styles.imageBtnText}>Take Photo</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.captionSection}>
+            <Text style={styles.label}>Caption</Text>
+            <TextInput
+              style={styles.captionInput}
+              placeholder="Write a caption..."
+              placeholderTextColor={colours.textMuted}
+              value={caption}
+              onChangeText={setCaption}
+              multiline
+              maxLength={500}
+              textAlignVertical="top"
+            />
+            <Text style={styles.charCount}>{caption.length}/500</Text>
+          </View>
+
+          <TouchableOpacity
+            style={[
+              styles.postBtn,
+              (!imageUri || !caption.trim()) && styles.postBtnDisabled,
+            ]}
+            onPress={handlePost}
+            activeOpacity={0.8}
+            disabled={!imageUri || !caption.trim()}
+          >
+            <Text style={styles.postBtnText}>Post</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
