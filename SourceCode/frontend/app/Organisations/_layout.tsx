@@ -1,10 +1,17 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
 import { Tabs, usePathname, useRouter } from "expo-router";
+import { registerForPushNotifications } from "../../lib/notifications";
 import BottomNavOrg from "../components/BottomNavOrg";
 
 export default function OrganisationsLayout() {
   const pathname = usePathname();
   const router = useRouter();
+
+  useEffect(() => {
+    registerForPushNotifications().catch((err) =>
+      console.error("Push registration error:", err),
+    );
+  }, []);
 
   const activeTab = useMemo(() => {
     if (pathname.includes("eventsOrg")) return "myEvents";

@@ -16,7 +16,7 @@ import {
   KeyboardAvoidingView,
   Keyboard,
   TouchableWithoutFeedback,
-  ScrollView
+  ScrollView,
 } from "react-native";
 import FilterBar from "../components/FilterBar";
 import EventCard from "../components/EventCard";
@@ -28,7 +28,12 @@ import { colours } from "../../lib/theme/colours";
 import { Spacing } from "../../lib/theme/spacing";
 import { useTabRefresh } from "../hooks/useTabRefresh";
 import { getStaticMapUrl } from "../../lib/staticMaps";
-import { getMyEvents, EventRecord, updateEvent, deleteEvent } from "../../lib/eventsApi";
+import {
+  getMyEvents,
+  EventRecord,
+  updateEvent,
+  deleteEvent,
+} from "../../lib/eventsApi";
 import { useTickets } from "../../contexts/TicketsContext";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
@@ -66,6 +71,7 @@ export default function EventsOrg() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [editLocation, setEditLocation] = useState("");
   const [editPrice, setEditPrice] = useState("£");
+  const [editCapacity, setEditCapacity] = useState("");
   const [editImageUri, setEditImageUri] = useState<string | null>(null);
   const [items, setItems] = useState([
     { label: "All Events", value: "All" },
@@ -76,7 +82,9 @@ export default function EventsOrg() {
 
   const canSave = useMemo(() => {
     const hasPrice = editPrice.replace(/[^0-9]/g, "").length > 0;
-    return Boolean(editTitle.trim() && editDate && editLocation.trim() && hasPrice);
+    return Boolean(
+      editTitle.trim() && editDate && editLocation.trim() && hasPrice,
+    );
   }, [editTitle, editDate, editLocation, editPrice]);
 
   const formatPriceDisplay = (rawValue: string) => {
@@ -179,10 +187,13 @@ export default function EventsOrg() {
           : dateLabelDate;
 
         // Format price for display - convert Decimal to currency string
-        const priceNum = typeof event.price === 'number' ? event.price : parseFloat(String(event.price)) || 0;
-        const formattedPrice = new Intl.NumberFormat('en-GB', {
-          style: 'currency',
-          currency: 'GBP',
+        const priceNum =
+          typeof event.price === "number"
+            ? event.price
+            : parseFloat(String(event.price)) || 0;
+        const formattedPrice = new Intl.NumberFormat("en-GB", {
+          style: "currency",
+          currency: "GBP",
         }).format(priceNum);
 
         return {
@@ -202,12 +213,16 @@ export default function EventsOrg() {
           date: eventDate,
         };
       }),
-    [events]
+    [events],
   );
 
   const visibleEvents = useMemo(() => {
     const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
     const endOfToday = new Date(startOfToday);
     endOfToday.setHours(23, 59, 59, 999);
 
@@ -218,7 +233,15 @@ export default function EventsOrg() {
     endOfWeek.setHours(23, 59, 59, 999);
 
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    const endOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+      999,
+    );
 
     return eventItems.filter((e) => {
       let matchesDate = true;
@@ -243,7 +266,7 @@ export default function EventsOrg() {
 
   const mapUrl = selectedEvent
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-        selectedEvent.mapLocation
+        selectedEvent.mapLocation,
       )}`
     : "";
 
@@ -259,6 +282,9 @@ export default function EventsOrg() {
     setEditLocation(selectedEvent.location);
     setEditPrice(selectedEvent.price);
     setEditDate(selectedEvent.dateISO ? new Date(selectedEvent.dateISO) : null);
+    setEditCapacity(
+      selectedEvent.capacity != null ? String(selectedEvent.capacity) : "",
+    );
     setEditImageUri(null);
   }, [selectedEvent]);
 
@@ -303,11 +329,14 @@ export default function EventsOrg() {
 
   const keyExtractor = useCallback((item: EventItem) => item.id, []);
 
-  const renderSectionTitle = useMemo(() => (
-    <Text style={styles.sectionTitle}>
-      {selectedDay === "All" ? "All events" : selectedDay}
-    </Text>
-  ), [selectedDay]);
+  const renderSectionTitle = useMemo(
+    () => (
+      <Text style={styles.sectionTitle}>
+        {selectedDay === "All" ? "All events" : selectedDay}
+      </Text>
+    ),
+    [selectedDay],
+  );
 
   const resetEditFields = useCallback(() => {
     if (!selectedEvent) {
@@ -318,9 +347,12 @@ export default function EventsOrg() {
     setEditDescription(selectedEvent.description);
     setEditLocation(selectedEvent.location);
     // Format price for editing - strip currency symbol and convert to editable format
-    const priceStr = selectedEvent.price.replace(/[^0-9.]/g, '');
-    setEditPrice(priceStr ? `£${priceStr}` : '£');
+    const priceStr = selectedEvent.price.replace(/[^0-9.]/g, "");
+    setEditPrice(priceStr ? `£${priceStr}` : "£");
     setEditDate(selectedEvent.dateISO ? new Date(selectedEvent.dateISO) : null);
+    setEditCapacity(
+      selectedEvent.capacity != null ? String(selectedEvent.capacity) : "",
+    );
     setEditImageUri(null);
   }, [selectedEvent]);
 
@@ -334,7 +366,10 @@ export default function EventsOrg() {
   const pickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert("Permission Required", "Please allow access to your photo library.");
+      Alert.alert(
+        "Permission Required",
+        "Please allow access to your photo library.",
+      );
       return;
     }
 
@@ -356,14 +391,17 @@ export default function EventsOrg() {
     }
 
     if (!canSave) {
-      Alert.alert("Missing fields", "Please fill in title, date, location and price.");
+      Alert.alert(
+        "Missing fields",
+        "Please fill in title, date, location and price.",
+      );
       return;
     }
 
     try {
       // Convert price string to number for Decimal type
       const priceString = normalizePrice(editPrice);
-      const priceNumber = parseFloat(priceString.replace(/[^0-9.]/g, '')) || 0;
+      const priceNumber = parseFloat(priceString.replace(/[^0-9.]/g, "")) || 0;
 
       await updateEvent({
         id: selectedEvent.id,
@@ -372,6 +410,7 @@ export default function EventsOrg() {
         date: editDate?.toISOString() ?? "",
         location: editLocation.trim(),
         price: priceNumber,
+        capacity: editCapacity ? parseInt(editCapacity, 10) : null,
         imageUri: editImageUri,
       });
 
@@ -464,12 +503,12 @@ export default function EventsOrg() {
                       {selectedEvent?.title}
                     </Text>
                     <TouchableOpacity
-  style={styles.modalCloseButton}
-  onPress={() => setSelectedEvent(null)}
-  activeOpacity={0.7}
->
-  <Text style={styles.modalCloseText}>✕</Text>
-</TouchableOpacity>
+                      style={styles.modalCloseButton}
+                      onPress={() => setSelectedEvent(null)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.modalCloseText}>✕</Text>
+                    </TouchableOpacity>
                   </View>
 
                   <ScrollView
@@ -514,7 +553,9 @@ export default function EventsOrg() {
                           <DateTimePicker
                             value={editDate ?? new Date()}
                             mode="datetime"
-                            display={Platform.OS === "ios" ? "spinner" : "default"}
+                            display={
+                              Platform.OS === "ios" ? "spinner" : "default"
+                            }
                             onChange={(event, selectedDate) => {
                               if (Platform.OS !== "ios") {
                                 setShowDatePicker(false);
@@ -552,11 +593,27 @@ export default function EventsOrg() {
                         <TextInput
                           style={styles.editInput}
                           value={editPrice}
-                          onChangeText={(value) => setEditPrice(formatPriceDisplay(value))}
+                          onChangeText={(value) =>
+                            setEditPrice(formatPriceDisplay(value))
+                          }
                           onBlur={() => setEditPrice(normalizePrice(editPrice))}
                           placeholder="e.g. £10.00"
                           placeholderTextColor={colours.textMuted}
                           keyboardType="decimal-pad"
+                          returnKeyType="done"
+                          onSubmitEditing={Keyboard.dismiss}
+                        />
+
+                        <Text style={styles.editLabel}>
+                          Ticket Capacity (Optional)
+                        </Text>
+                        <TextInput
+                          style={styles.editInput}
+                          value={editCapacity}
+                          onChangeText={setEditCapacity}
+                          placeholder="Leave empty for unlimited"
+                          placeholderTextColor={colours.textMuted}
+                          keyboardType="numeric"
                           returnKeyType="done"
                           onSubmitEditing={Keyboard.dismiss}
                         />
@@ -588,7 +645,10 @@ export default function EventsOrg() {
 
                         <View style={styles.editPreviewFrame}>
                           {editImageUri ? (
-                            <Image source={{ uri: editImageUri }} style={styles.editPreviewImage} />
+                            <Image
+                              source={{ uri: editImageUri }}
+                              style={styles.editPreviewImage}
+                            />
                           ) : selectedEvent?.eventImageUrl ? (
                             <Image
                               source={{ uri: selectedEvent.eventImageUrl }}
@@ -603,27 +663,41 @@ export default function EventsOrg() {
                       </View>
                     ) : (
                       <>
-                        <Text style={styles.modalMeta}>{selectedEvent?.dateLabel}</Text>
-                        <Text style={styles.modalMeta}>{selectedEvent?.location}</Text>
-                        <Text style={styles.modalMeta}>{selectedEvent?.price}</Text>
                         <Text style={styles.modalMeta}>
-                          {selectedEvent?.capacity !== null && selectedEvent?.capacity !== undefined
+                          {selectedEvent?.dateLabel}
+                        </Text>
+                        <Text style={styles.modalMeta}>
+                          {selectedEvent?.location}
+                        </Text>
+                        <Text style={styles.modalMeta}>
+                          {selectedEvent?.price}
+                        </Text>
+                        <Text style={styles.modalMeta}>
+                          {selectedEvent?.capacity !== null &&
+                          selectedEvent?.capacity !== undefined
                             ? `${selectedEvent.ticketCount}/${selectedEvent.capacity} tickets`
-                            : `${selectedEvent?.ticketCount} ${selectedEvent?.ticketCount === 1 ? 'ticket' : 'tickets'} booked`}
+                            : `${selectedEvent?.ticketCount} ${selectedEvent?.ticketCount === 1 ? "ticket" : "tickets"} booked`}
                         </Text>
                         {selectedEvent?.description ? (
-                          <Text style={styles.modalMeta}>{selectedEvent.description}</Text>
+                          <Text style={styles.modalMeta}>
+                            {selectedEvent.description}
+                          </Text>
                         ) : null}
 
                         <View style={styles.mapFrame}>
-  {modalMapUrl ? (
-    <Image source={{ uri: modalMapUrl }} style={styles.mapWebView} />
-  ) : (
-    <View style={styles.mapFallback}>
-      <Text style={styles.eventImageText}>Loading map...</Text>
-    </View>
-  )}
-</View>
+                          {modalMapUrl ? (
+                            <Image
+                              source={{ uri: modalMapUrl }}
+                              style={styles.mapWebView}
+                            />
+                          ) : (
+                            <View style={styles.mapFallback}>
+                              <Text style={styles.eventImageText}>
+                                Loading map...
+                              </Text>
+                            </View>
+                          )}
+                        </View>
                       </>
                     )}
                   </ScrollView>
@@ -635,7 +709,11 @@ export default function EventsOrg() {
                         onPress={handleSave}
                         activeOpacity={0.85}
                       >
-                        <Text style={[styles.actionText, styles.actionTextInverse]}>Save</Text>
+                        <Text
+                          style={[styles.actionText, styles.actionTextInverse]}
+                        >
+                          Save
+                        </Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={styles.actionButton}
@@ -657,14 +735,22 @@ export default function EventsOrg() {
                         onPress={() => setIsEditing(true)}
                         activeOpacity={0.85}
                       >
-                        <Text style={[styles.actionText, styles.actionTextInverse]}>Edit</Text>
+                        <Text
+                          style={[styles.actionText, styles.actionTextInverse]}
+                        >
+                          Edit
+                        </Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={[styles.actionButton, styles.actionDanger]}
                         onPress={handleDelete}
                         activeOpacity={0.85}
                       >
-                        <Text style={[styles.actionText, styles.actionTextInverse]}>Delete</Text>
+                        <Text
+                          style={[styles.actionText, styles.actionTextInverse]}
+                        >
+                          Delete
+                        </Text>
                       </TouchableOpacity>
                     </View>
                   )}
@@ -675,10 +761,17 @@ export default function EventsOrg() {
                         style={[styles.openMapBtn, styles.scanBtn]}
                         onPress={() => {
                           setSelectedEvent(null);
-                          router.push(`/Organisations/scanTickets?eventId=${selectedEvent.id}&eventTitle=${encodeURIComponent(selectedEvent.title)}` as any);
+                          router.push(
+                            `/Organisations/scanTickets?eventId=${selectedEvent.id}&eventTitle=${encodeURIComponent(selectedEvent.title)}` as any,
+                          );
                         }}
                       >
-                        <Ionicons name="scan-outline" size={20} color={colours.surface} style={{ marginRight: 8 }} />
+                        <Ionicons
+                          name="scan-outline"
+                          size={20}
+                          color={colours.surface}
+                          style={{ marginRight: 8 }}
+                        />
                         <Text style={styles.openMapText}>Scan Tickets</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
@@ -1029,21 +1122,21 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   modalCloseButton: {
-  width: 36,
-  height: 36,
-  borderRadius: 18,
-  alignItems: "center",
-  justifyContent: "center",
-  backgroundColor: colours.primary,
-  borderWidth: 1,
-  borderColor: colours.border,
-},
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colours.primary,
+    borderWidth: 1,
+    borderColor: colours.border,
+  },
 
-modalCloseText: {
-  fontSize: 18,
-  fontWeight: "700",
-  color: colours.textPrimary,
-  alignItems: "center",
-  justifyContent: "center",
-},
+  modalCloseText: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: colours.textPrimary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });

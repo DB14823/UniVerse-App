@@ -12,10 +12,7 @@ import {
 } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
 import { StripeProvider } from "@stripe/stripe-react-native";
-import {
-  registerForPushNotifications,
-  setupNotificationListeners,
-} from "../lib/notifications";
+import { setupNotificationListeners } from "../lib/notifications";
 
 const STRIPE_PUBLISHABLE_KEY =
   "pk_test_51TBdQvAgJTtyyhMfekHL463sc5RPWH3Fwog929u0oBgDM4S3tgkJjBIqFteVkukRaVDwvk3llEk78cmmiPWLocb3001Tsdihhd";
@@ -117,9 +114,6 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
-    registerForPushNotifications().catch((err) =>
-      console.error("Push registration error:", err),
-    );
     return setupNotificationListeners();
   }, []);
 

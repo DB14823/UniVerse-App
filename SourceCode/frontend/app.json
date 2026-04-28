@@ -9,6 +9,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "icon": "./assets/images/app_icon.png",
       "supportsTablet": true,
       "bundleIdentifier": "uk.co.dylanbennett.universe",
       "infoPlist": {

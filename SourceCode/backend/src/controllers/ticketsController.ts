@@ -18,29 +18,22 @@ export const createTicket = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Missing eventId" });
     }
 
-    // ensure event exists
-    const event = await prisma.event.findUnique({
+    // ensure event exists and parse price before touching Stripe
+    const eventForPrice = await prisma.event.findUnique({
       where: { id: eventId },
-      include: {
-        _count: { select: { tickets: true } },
-      },
     });
-    if (!event) {
+    if (!eventForPrice) {
       return res.status(404).json({ message: "Event not found" });
-    }
-
-    // Check capacity
-    if (event.capacity !== null && event._count.tickets >= event.capacity) {
-      return res.status(400).json({ message: "Event is fully booked" });
     }
 
     // Parse price
     const price =
-      typeof event.price === "number"
-        ? event.price
-        : parseFloat(String(event.price)) || 0;
+      typeof eventForPrice.price === "number"
+        ? eventForPrice.price
+        : parseFloat(String(eventForPrice.price)) || 0;
 
-    // If event has a price, require payment verification
+    // If event has a price, verify payment before opening the DB transaction
+    // (external network calls must not be held inside a transaction)
     if (price > 0) {
       if (!paymentIntentId) {
         return res.status(400).json({
@@ -50,7 +43,6 @@ export const createTicket = async (req: Request, res: Response) => {
         });
       }
 
-      // Verify the payment succeeded
       const verification = await verifyPaymentIntent(paymentIntentId);
       if (!verification.succeeded) {
         return res
@@ -58,7 +50,6 @@ export const createTicket = async (req: Request, res: Response) => {
           .json({ message: "Payment has not been completed" });
       }
 
-      // Verify the payment is for this event
       if (verification.eventId !== eventId) {
         return res
           .status(400)
@@ -66,21 +57,57 @@ export const createTicket = async (req: Request, res: Response) => {
       }
     }
 
-    // avoid duplicate tickets
-    const existing = await prisma.ticket.findUnique({
-      where: { studentId_eventId: { studentId: userId, eventId } },
-    });
-    if (existing) {
-      return res.status(409).json({ message: "Ticket already exists" });
-    }
+    // Serializable transaction: capacity check + duplicate check + create are
+    // atomic, so two concurrent bookings of the last spot cannot both succeed.
+    let ticket: Awaited<ReturnType<typeof prisma.ticket.create>>;
+    let event: typeof eventForPrice;
+    try {
+      const result = await prisma.$transaction(
+        async (tx) => {
+          const ev = await tx.event.findUnique({
+            where: { id: eventId },
+            include: { _count: { select: { tickets: true } } },
+          });
+          if (!ev)
+            throw Object.assign(new Error("Event not found"), {
+              statusCode: 404,
+            });
 
-    const ticket = await prisma.ticket.create({
-      data: {
-        studentId: userId,
-        eventId,
-        paymentIntentId: price > 0 ? paymentIntentId : null,
-      },
-    });
+          if (ev.capacity !== null && ev._count.tickets >= ev.capacity) {
+            throw Object.assign(new Error("Event is fully booked"), {
+              statusCode: 400,
+            });
+          }
+
+          const existing = await tx.ticket.findUnique({
+            where: { studentId_eventId: { studentId: userId, eventId } },
+          });
+          if (existing) {
+            throw Object.assign(new Error("Ticket already exists"), {
+              statusCode: 409,
+            });
+          }
+
+          const created = await tx.ticket.create({
+            data: {
+              studentId: userId,
+              eventId,
+              paymentIntentId: price > 0 ? paymentIntentId : null,
+            },
+          });
+
+          return { ticket: created, event: ev };
+        },
+        { isolationLevel: "Serializable" },
+      );
+      ticket = result.ticket;
+      event = result.event as typeof eventForPrice;
+    } catch (txError: any) {
+      const status = txError.statusCode ?? 500;
+      return res
+        .status(status)
+        .json({ message: txError.message ?? "Server error" });
+    }
 
     // Notify student of ticket confirmation + org of new booking
     try {

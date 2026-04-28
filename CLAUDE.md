@@ -89,7 +89,7 @@ Run `npm run env:init` from root to bootstrap `.env` files from `.env.example`.
 
 ## Known Issues
 
-- Notifications toggle UI exists but push notifications are non-functional end-to-end.
+- Push notifications are fully functional end-to-end (APNs key configured, cron reminders, follow/like/comment/booking triggers). Requires EAS preview build — local Xcode builds lack the `aps-environment` entitlement.
 - Organisation verification badge shows for all orgs regardless of verified status.
 
 ## TypeScript

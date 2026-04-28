@@ -9,7 +9,7 @@ import { createPaymentIntent } from "../utils/stripe";
  */
 export const createPaymentIntentController = async (
   req: Request,
-  res: Response
+  res: Response,
 ) => {
   try {
     const userId = req.user?.id;
@@ -47,6 +47,14 @@ export const createPaymentIntentController = async (
       });
     }
 
+    // Reject if event is already at capacity — avoids charging for a sold-out event
+    if (event.capacity !== null) {
+      const ticketCount = await prisma.ticket.count({ where: { eventId } });
+      if (ticketCount >= event.capacity) {
+        return res.status(400).json({ message: "Event is fully booked" });
+      }
+    }
+
     // Check if user already has a ticket
     const existingTicket = await prisma.ticket.findUnique({
       where: {
@@ -58,7 +66,9 @@ export const createPaymentIntentController = async (
     });
 
     if (existingTicket) {
-      return res.status(409).json({ message: "You already have a ticket for this event" });
+      return res
+        .status(409)
+        .json({ message: "You already have a ticket for this event" });
     }
 
     // Convert to pence (Stripe expects smallest currency unit)
@@ -68,7 +78,9 @@ export const createPaymentIntentController = async (
     const result = await createPaymentIntent(amountInPence, eventId);
 
     if (!result) {
-      return res.status(500).json({ message: "Failed to create payment intent" });
+      return res
+        .status(500)
+        .json({ message: "Failed to create payment intent" });
     }
 
     return res.json({

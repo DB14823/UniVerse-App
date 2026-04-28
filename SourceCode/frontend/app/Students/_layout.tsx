@@ -1,10 +1,17 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
 import { Tabs, usePathname, useRouter } from "expo-router";
+import { registerForPushNotifications } from "../../lib/notifications";
 import BottomNavStudent from "../components/BottomNavStudent";
 
 export default function StudentsLayout() {
   const pathname = usePathname();
   const router = useRouter();
+
+  useEffect(() => {
+    registerForPushNotifications().catch((err) =>
+      console.error("Push registration error:", err),
+    );
+  }, []);
 
   const activeTab = useMemo(() => {
     if (pathname.includes("EventFeed")) return "events";
