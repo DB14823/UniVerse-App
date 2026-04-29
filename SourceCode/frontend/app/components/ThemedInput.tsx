@@ -1,12 +1,6 @@
 import React, { useState, useCallback, useMemo } from "react";
-import {
-  View,
-  TextInput,
-  Text,
-  StyleSheet,
-  Animated,
-  Pressable,
-} from "react-native";
+import { View, TextInput, Text, StyleSheet, Pressable } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { colours } from "../../lib/theme/colours";
 
 interface ThemedInputProps {
@@ -47,11 +41,14 @@ export default React.memo(function ThemedInput({
     setShowPassword((prev) => !prev);
   }, []);
 
-  const inputContainerStyle = useMemo(() => [
-    styles.inputContainer,
-    isFocused && styles.inputContainerFocused,
-    error && styles.inputContainerError,
-  ], [isFocused, error]);
+  const inputContainerStyle = useMemo(
+    () => [
+      styles.inputContainer,
+      isFocused && styles.inputContainerFocused,
+      error && styles.inputContainerError,
+    ],
+    [isFocused, error],
+  );
 
   return (
     <View style={styles.wrapper}>
@@ -71,11 +68,12 @@ export default React.memo(function ThemedInput({
           selectionColor={colours.primary}
         />
         {secureTextEntry && showPasswordToggle && (
-          <Pressable
-            style={styles.toggleButton}
-            onPress={togglePassword}
-          >
-            <Text style={styles.toggleText}>{showPassword ? "👁" : "👁‍🗨"}</Text>
+          <Pressable style={styles.toggleButton} onPress={togglePassword}>
+            <Ionicons
+              name={showPassword ? "eye-off" : "eye"}
+              size={20}
+              color={colours.textMuted}
+            />
           </Pressable>
         )}
       </View>
@@ -125,9 +123,6 @@ const styles = StyleSheet.create({
   toggleButton: {
     padding: 8,
     marginRight: -8,
-  },
-  toggleText: {
-    fontSize: 16,
   },
   errorText: {
     marginTop: 6,

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { Ionicons } from "@expo/vector-icons";
 import {
   View,
   Text,
@@ -14,12 +15,26 @@ import {
   Platform,
   Keyboard,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import * as SecureStore from "expo-secure-store";
 import { colours } from "../../lib/theme/colours";
-import { getPostById, getComments, createComment, deleteComment, Post, Comment, deletePost, updatePost, getCurrentUser } from "../../lib/postsApi";
+import {
+  getPostById,
+  getComments,
+  createComment,
+  deleteComment,
+  Post,
+  Comment,
+  deletePost,
+  updatePost,
+  getCurrentUser,
+  togglePostLike,
+} from "../../lib/postsApi";
 
 function formatTimeAgo(dateString: string): string {
   const date = new Date(dateString);
@@ -54,6 +69,24 @@ export default function PostDetail() {
   const [editLoading, setEditLoading] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+
+  const handleToggleLike = useCallback(async () => {
+    if (!postId) return;
+    const prevLiked = liked;
+    const prevCount = likeCount;
+    setLiked(!prevLiked);
+    setLikeCount(prevLiked ? prevCount - 1 : prevCount + 1);
+    try {
+      const result = await togglePostLike(postId);
+      setLiked(result.likedByMe);
+      setLikeCount(result.likeCount);
+    } catch {
+      setLiked(prevLiked);
+      setLikeCount(prevCount);
+    }
+  }, [postId, liked, likeCount]);
 
   const loadComments = useCallback(async () => {
     if (!postId) return;
@@ -92,6 +125,8 @@ export default function PostDetail() {
         if (active) {
           setPost(data);
           setEditCaption(data.caption);
+          setLiked(data.likedByMe ?? false);
+          setLikeCount(data.likeCount ?? 0);
           setError(null);
         }
 
@@ -115,22 +150,21 @@ export default function PostDetail() {
     };
   }, [postId, loadComments]);
 
-  const isOwner = post && currentUserId && (post.studentId === currentUserId || post.organisationId === currentUserId);
+  const isOwner =
+    post &&
+    currentUserId &&
+    (post.studentId === currentUserId || post.organisationId === currentUserId);
 
   const handleDeletePress = () => {
     setShowMenu(false);
-    Alert.alert(
-      "Delete Post",
-      "Are you sure you want to delete this post?",
-      [
-        { text: "Cancel", onPress: () => {}, style: "cancel" },
-        {
-          text: "Delete",
-          onPress: handleDelete,
-          style: "destructive",
-        },
-      ]
-    );
+    Alert.alert("Delete Post", "Are you sure you want to delete this post?", [
+      { text: "Cancel", onPress: () => {}, style: "cancel" },
+      {
+        text: "Delete",
+        onPress: handleDelete,
+        style: "destructive",
+      },
+    ]);
   };
 
   const handleDelete = async () => {
@@ -173,7 +207,11 @@ export default function PostDetail() {
 
     try {
       setEditLoading(true);
-      const updatedPost = await updatePost(postId, editCaption, editImage || undefined);
+      const updatedPost = await updatePost(
+        postId,
+        editCaption,
+        editImage || undefined,
+      );
       setPost(updatedPost);
       setShowEditModal(false);
       setEditImage(null);
@@ -220,7 +258,7 @@ export default function PostDetail() {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -251,7 +289,10 @@ export default function PostDetail() {
           key={i}
           style={styles.hashtag}
           onPress={() =>
-            router.push({ pathname: "/Students/socialStudent", params: { q: p.text } } as any)
+            router.push({
+              pathname: "/Students/socialStudent",
+              params: { q: p.text },
+            } as any)
           }
         >
           {p.text}
@@ -260,7 +301,7 @@ export default function PostDetail() {
         <Text key={i} style={styles.captionTextInline}>
           {p.text}
         </Text>
-      )
+      ),
     );
   };
 
@@ -355,8 +396,25 @@ export default function PostDetail() {
               </View>
 
               <View style={styles.metaRow}>
-                <Text style={styles.likesText}>{post.likeCount} likes</Text>
-                <Text style={styles.captionText}>{renderCaptionParts(post.caption)}</Text>
+                <TouchableOpacity
+                  style={styles.likeButton}
+                  onPress={handleToggleLike}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name={liked ? "heart" : "heart-outline"}
+                    size={26}
+                    color={liked ? colours.accent : colours.textMuted}
+                  />
+                  <Text
+                    style={[styles.likesText, liked && styles.likesTextActive]}
+                  >
+                    {likeCount} {likeCount === 1 ? "like" : "likes"}
+                  </Text>
+                </TouchableOpacity>
+                <Text style={styles.captionText}>
+                  {renderCaptionParts(post.caption)}
+                </Text>
               </View>
 
               {/* Comments Section */}
@@ -366,9 +424,15 @@ export default function PostDetail() {
                 </Text>
 
                 {commentsLoading ? (
-                  <ActivityIndicator size="small" color={colours.primary} style={styles.commentsLoading} />
+                  <ActivityIndicator
+                    size="small"
+                    color={colours.primary}
+                    style={styles.commentsLoading}
+                  />
                 ) : comments.length === 0 ? (
-                  <Text style={styles.noCommentsText}>No comments yet. Be the first to comment!</Text>
+                  <Text style={styles.noCommentsText}>
+                    No comments yet. Be the first to comment!
+                  </Text>
                 ) : (
                   comments.map((comment) => (
                     <View key={comment.id} style={styles.commentItem}>
@@ -382,10 +446,16 @@ export default function PostDetail() {
                       </View>
                       <View style={styles.commentContent}>
                         <View style={styles.commentHeader}>
-                          <Text style={styles.commentUsername}>{comment.User.username}</Text>
-                          <Text style={styles.commentTime}>{formatTimeAgo(comment.createdAt)}</Text>
+                          <Text style={styles.commentUsername}>
+                            {comment.User.username}
+                          </Text>
+                          <Text style={styles.commentTime}>
+                            {formatTimeAgo(comment.createdAt)}
+                          </Text>
                         </View>
-                        <Text style={styles.commentText}>{comment.content}</Text>
+                        <Text style={styles.commentText}>
+                          {comment.content}
+                        </Text>
                       </View>
                       {comment.User.id === currentUserId && (
                         <TouchableOpacity
@@ -406,7 +476,12 @@ export default function PostDetail() {
 
         {/* Comment Input */}
         {post && (
-          <View style={[styles.commentInputContainer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+          <View
+            style={[
+              styles.commentInputContainer,
+              { paddingBottom: Math.max(insets.bottom, 16) },
+            ]}
+          >
             <TextInput
               style={styles.commentInput}
               placeholder="Add a comment..."
@@ -418,7 +493,11 @@ export default function PostDetail() {
               editable={!submittingComment}
             />
             <TouchableOpacity
-              style={[styles.submitBtn, (!commentText.trim() || submittingComment) && styles.submitBtnDisabled]}
+              style={[
+                styles.submitBtn,
+                (!commentText.trim() || submittingComment) &&
+                  styles.submitBtnDisabled,
+              ]}
               onPress={handleSubmitComment}
               disabled={!commentText.trim() || submittingComment}
               activeOpacity={0.8}
@@ -636,9 +715,15 @@ const styles = StyleSheet.create({
   mediaImage: { width: "100%", height: "100%", resizeMode: "cover" },
 
   metaRow: { gap: 8 },
+  likeButton: { flexDirection: "row", alignItems: "center", gap: 8 },
   likesText: { color: colours.textSecondary, fontSize: 16, fontWeight: "800" },
+  likesTextActive: { color: colours.accent },
   captionText: { color: colours.textPrimary, fontSize: 18, fontWeight: "800" },
-  captionTextInline: { color: colours.textPrimary, fontSize: 18, fontWeight: "800" },
+  captionTextInline: {
+    color: colours.textPrimary,
+    fontSize: 18,
+    fontWeight: "800",
+  },
   hashtag: { color: colours.secondary, fontSize: 18, fontWeight: "800" },
 
   // Comments styles

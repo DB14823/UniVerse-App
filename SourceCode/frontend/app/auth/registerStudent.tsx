@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
+import { Ionicons } from "@expo/vector-icons";
 import { API_URL } from "../../lib/api";
 import ThemedInput from "../components/ThemedInput";
 import ThemedButton from "../components/ThemedButton";
@@ -39,9 +40,12 @@ export default function RegisterStudent() {
   const isStrongPassword = (value: string) =>
     value.length >= 8 && /\d/.test(value);
 
-  const registerRequest = async (emailValue: string, usernameValue: string, passwordValue: string) => {
+  const registerRequest = async (
+    emailValue: string,
+    usernameValue: string,
+    passwordValue: string,
+  ) => {
     const url = `${API_URL}/auth/register-student`;
-    console.log("Calling backend:", url);
 
     const response = await fetch(url, {
       method: "POST",
@@ -67,7 +71,9 @@ export default function RegisterStudent() {
 
     if (!response.ok) {
       throw new Error(
-        data?.error || data?.message || `Registration failed (HTTP ${response.status})`
+        data?.error ||
+          data?.message ||
+          `Registration failed (HTTP ${response.status})`,
       );
     }
 
@@ -77,7 +83,13 @@ export default function RegisterStudent() {
 
     return data as {
       token: string;
-      user: { id: string; email: string; username: string; role: string; name?: string };
+      user: {
+        id: string;
+        email: string;
+        username: string;
+        role: string;
+        name?: string;
+      };
     };
   };
 
@@ -133,7 +145,11 @@ export default function RegisterStudent() {
     setLoading(true);
 
     try {
-      const { token, user } = await registerRequest(trimmedEmail, trimmedUsername, password);
+      const { token, user } = await registerRequest(
+        trimmedEmail,
+        trimmedUsername,
+        password,
+      );
 
       await SecureStore.setItemAsync("authToken", token);
       await SecureStore.setItemAsync("userId", user.id);
@@ -141,7 +157,7 @@ export default function RegisterStudent() {
       await SecureStore.setItemAsync("userRole", user.role);
       await SecureStore.setItemAsync("role", user.role);
 
-      Alert.alert("Success", "Account created successfully!");
+      Alert.alert("Welcome to UniVerse!", "Your account has been created.");
       router.replace("/Students/EventFeed");
     } catch (err: any) {
       Alert.alert("Registration failed", err?.message || "Please try again.");
@@ -159,6 +175,14 @@ export default function RegisterStudent() {
       <CosmicBackground />
       <View style={styles.overlay} />
 
+      <TouchableOpacity
+        style={styles.backBtn}
+        onPress={() => router.back()}
+        activeOpacity={0.85}
+      >
+        <Ionicons name="arrow-back" size={20} color={colours.textPrimary} />
+      </TouchableOpacity>
+
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
@@ -168,72 +192,115 @@ export default function RegisterStudent() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Join the UniVerse community</Text>
-
-          <ThemedInput
-            label="Username"
-            placeholder="Choose a username"
-            value={username}
-            onChangeText={(text) => {
-              setUsername(text);
-              if (errors.username) setErrors({ ...errors, username: "" });
-            }}
-            autoCapitalize="none"
-            error={errors.username}
-          />
-
-          <ThemedInput
-            label="Student Email"
-            placeholder="yourname@students.plymouth.ac.uk"
-            value={email}
-            onChangeText={(text) => {
-              setEmail(text);
-              if (errors.email) setErrors({ ...errors, email: "" });
-            }}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            error={errors.email}
-          />
-
-          <ThemedInput
-            label="Create Password"
-            placeholder="Minimum 8 characters"
-            value={password}
-            onChangeText={(text) => {
-              setPassword(text);
-              if (errors.password) setErrors({ ...errors, password: "" });
-            }}
-            secureTextEntry
-            error={errors.password}
-          />
-
-          <ThemedInput
-            label="Confirm Password"
-            placeholder="Re-enter password"
-            value={confirmPassword}
-            onChangeText={(text) => {
-              setConfirmPassword(text);
-              if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: "" });
-            }}
-            secureTextEntry
-            error={errors.confirmPassword}
-          />
-
-          <View style={styles.buttonContainer}>
-            <ThemedButton
-              title="Create Account"
-              onPress={handleRegister}
-              loading={loading}
-              variant="primary"
-              size="large"
-              fullWidth
-              glow
-            />
+          <View style={styles.headerSection}>
+            <Text style={styles.title}>Join UniVerse</Text>
+            <Text style={styles.subtitle}>Create your student account</Text>
           </View>
 
-          <TouchableOpacity onPress={() => router.back()} disabled={loading}>
-            <Text style={styles.loginText}>Back to Login</Text>
+          <View style={styles.card}>
+            <View style={styles.sectionHeader}>
+              <Ionicons
+                name="person-outline"
+                size={16}
+                color={colours.primary}
+              />
+              <Text style={styles.sectionLabel}>Your Identity</Text>
+            </View>
+
+            <ThemedInput
+              label="Username"
+              placeholder="Choose a username"
+              value={username}
+              onChangeText={(text) => {
+                setUsername(text);
+                if (errors.username) setErrors({ ...errors, username: "" });
+              }}
+              autoCapitalize="none"
+              error={errors.username}
+            />
+
+            <ThemedInput
+              label="Student Email"
+              placeholder="yourname@students.plymouth.ac.uk"
+              value={email}
+              onChangeText={(text) => {
+                setEmail(text);
+                if (errors.email) setErrors({ ...errors, email: "" });
+              }}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              error={errors.email}
+            />
+
+            <View style={styles.divider} />
+
+            <View style={styles.sectionHeader}>
+              <Ionicons
+                name="lock-closed-outline"
+                size={16}
+                color={colours.primary}
+              />
+              <Text style={styles.sectionLabel}>Security</Text>
+            </View>
+
+            <ThemedInput
+              label="Create Password"
+              placeholder="Minimum 8 characters"
+              value={password}
+              onChangeText={(text) => {
+                setPassword(text);
+                if (errors.password) setErrors({ ...errors, password: "" });
+              }}
+              secureTextEntry
+              error={errors.password}
+            />
+
+            <ThemedInput
+              label="Confirm Password"
+              placeholder="Re-enter password"
+              value={confirmPassword}
+              onChangeText={(text) => {
+                setConfirmPassword(text);
+                if (errors.confirmPassword)
+                  setErrors({ ...errors, confirmPassword: "" });
+              }}
+              secureTextEntry
+              error={errors.confirmPassword}
+            />
+
+            <View style={styles.hint}>
+              <Ionicons
+                name="information-circle-outline"
+                size={14}
+                color={colours.textMuted}
+              />
+              <Text style={styles.hintText}>
+                Must use your @students.plymouth.ac.uk email
+              </Text>
+            </View>
+
+            <View style={styles.buttonContainer}>
+              <ThemedButton
+                title="Create Account"
+                onPress={handleRegister}
+                loading={loading}
+                variant="primary"
+                size="large"
+                fullWidth
+                glow
+              />
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={styles.loginLink}
+            onPress={() => router.back()}
+            disabled={loading}
+          >
+            <Text style={styles.loginLinkText}>Already have an account? </Text>
+            <Text style={[styles.loginLinkText, styles.loginLinkAccent]}>
+              Sign in
+            </Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -249,44 +316,105 @@ const styles = StyleSheet.create({
   keyboardView: {
     flex: 1,
   },
-  content: {
-    flexGrow: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: spacing.xxxl,
-    paddingTop: spacing.huge,
-    paddingBottom: spacing.xxl,
-  },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(5, 8, 16, 0.65)",
+    backgroundColor: "rgba(5, 8, 16, 0.70)",
+  },
+  backBtn: {
+    position: "absolute",
+    top: 60,
+    left: 20,
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.full,
+    backgroundColor: colours.glass,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10,
+    borderWidth: 1.5,
+    borderColor: colours.border,
+  },
+  content: {
+    flexGrow: 1,
+    alignItems: "center",
+    paddingHorizontal: spacing.xxxl,
+    paddingTop: 120,
+    paddingBottom: spacing.xxl,
+  },
+  headerSection: {
+    alignItems: "center",
+    marginBottom: spacing.xxl,
   },
   title: {
-    fontSize: 48,
+    fontSize: 40,
     fontWeight: "800",
-    marginBottom: spacing.sm,
     color: colours.textPrimary,
     textShadowColor: colours.glow,
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 20,
+    marginBottom: spacing.xs,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "500",
     color: colours.textSecondary,
-    marginBottom: spacing.xxxl,
     letterSpacing: 0.3,
   },
-  buttonContainer: {
-    marginTop: spacing.lg,
+  card: {
+    width: "100%",
+    backgroundColor: "rgba(10, 14, 31, 0.75)",
+    borderRadius: borderRadius.xl,
+    borderWidth: 1.5,
+    borderColor: colours.border,
+    padding: spacing.xxl,
+    marginBottom: spacing.xl,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: spacing.md,
+    gap: spacing.sm,
+  },
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: colours.primary,
+    letterSpacing: 1,
+    textTransform: "uppercase",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colours.border,
+    marginVertical: spacing.lg,
+  },
+  hint: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    marginTop: spacing.xs,
     marginBottom: spacing.lg,
+  },
+  hintText: {
+    fontSize: 12,
+    color: colours.textMuted,
+    flex: 1,
+  },
+  buttonContainer: {
     width: "100%",
   },
-  loginText: {
-    marginTop: spacing.md,
-    fontSize: 15,
+  loginLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: spacing.sm,
+  },
+  loginLinkText: {
+    fontSize: 14,
     color: colours.textSecondary,
+    fontWeight: "500",
+  },
+  loginLinkAccent: {
+    color: colours.primary,
+    fontWeight: "700",
     textDecorationLine: "underline",
-    fontWeight: "600",
   },
 });

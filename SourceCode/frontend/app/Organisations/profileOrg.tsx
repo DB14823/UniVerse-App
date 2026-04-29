@@ -12,14 +12,28 @@ import {
   Linking,
   ActivityIndicator,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { Image as ExpoImage } from "expo-image";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { Ionicons } from "@expo/vector-icons";
-import { getUserPosts, getCurrentUser, getUserProfile, Post } from "../../lib/postsApi";
+import {
+  getUserPosts,
+  getCurrentUser,
+  getUserProfile,
+  Post,
+} from "../../lib/postsApi";
 import { EventRecord, getEventsByOrganiser } from "../../lib/eventsApi";
 import { getStaticMapUrl } from "../../lib/staticMaps";
-import { followUser, unfollowUser, checkFollowing, getFollowCounts } from "../../lib/followApi";
+import {
+  followUser,
+  unfollowUser,
+  checkFollowing,
+  getFollowCounts,
+} from "../../lib/followApi";
 import { colours } from "../../lib/theme/colours";
 
 export default function ProfileOrg() {
@@ -53,7 +67,7 @@ export default function ProfileOrg() {
 
   const totalLikes = useMemo(
     () => orgPosts.reduce((sum, post) => sum + (post.likeCount ?? 0), 0),
-    [orgPosts]
+    [orgPosts],
   );
 
   const normalizeParam = (value?: string | string[]) =>
@@ -68,7 +82,7 @@ export default function ProfileOrg() {
 
   const mapUrl = selectedEvent
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-        selectedEvent.organiser.location ?? selectedEvent.location
+        selectedEvent.organiser.location ?? selectedEvent.location,
       )}`
     : "";
 
@@ -93,7 +107,8 @@ export default function ProfileOrg() {
           SecureStore.getItemAsync("userRole"),
         ]);
 
-        const fallbackRole = storedRole || (await SecureStore.getItemAsync("role"));
+        const fallbackRole =
+          storedRole || (await SecureStore.getItemAsync("role"));
         normalizedRole = fallbackRole
           ? fallbackRole === "ORGANISATION"
             ? "ORGANISATION"
@@ -123,7 +138,8 @@ export default function ProfileOrg() {
       return;
     }
 
-    const mapLocation = selectedEvent.organiser.location ?? selectedEvent.location;
+    const mapLocation =
+      selectedEvent.organiser.location ?? selectedEvent.location;
     getStaticMapUrl(mapLocation).then((url) => {
       if (!cancelled) {
         setModalMapUrl(url);
@@ -137,7 +153,7 @@ export default function ProfileOrg() {
 
   const loadOrgProfile = async (
     targetUserId: string | null,
-    targetUsername: string | null
+    targetUsername: string | null,
   ) => {
     try {
       setLoading(true);
@@ -275,7 +291,8 @@ export default function ProfileOrg() {
   }, [userId, isFollowing, followLoading]);
 
   // Check if viewing another profile (not own)
-  const isViewingOther = routeUserId && currentUserId && routeUserId !== currentUserId;
+  const isViewingOther =
+    routeUserId && currentUserId && routeUserId !== currentUserId;
 
   const bottomPad = 110 + Math.max(insets.bottom, 0);
 
@@ -288,7 +305,7 @@ export default function ProfileOrg() {
             router.replace(
               currentUserRole === "ORGANISATION"
                 ? "/Organisations/socialOrg"
-                : "/Students/socialStudent"
+                : "/Students/socialStudent",
             )
           }
           activeOpacity={0.85}
@@ -326,12 +343,14 @@ export default function ProfileOrg() {
         }
       >
         <View style={styles.avatarWrap}>
-          <View style={styles.avatarWithGlow}>
-            <View style={styles.avatarCircle}>
-              {profileImageUri ? (
-                <Image source={{ uri: profileImageUri }} style={styles.avatarImage} />
-              ) : null}
-            </View>
+          <View style={styles.avatarGlow}>
+            {profileImageUri ? (
+              <ExpoImage
+                source={{ uri: profileImageUri }}
+                style={styles.avatarImage}
+                contentFit="cover"
+              />
+            ) : null}
           </View>
         </View>
 
@@ -355,10 +374,7 @@ export default function ProfileOrg() {
 
         {isViewingOther && userId && (
           <TouchableOpacity
-            style={[
-              styles.followBtn,
-              isFollowing ? styles.followingBtn : null,
-            ]}
+            style={[styles.followBtn, isFollowing ? styles.followingBtn : null]}
             onPress={handleFollowPress}
             disabled={followLoading}
             activeOpacity={0.85}
@@ -370,7 +386,9 @@ export default function ProfileOrg() {
                 <Ionicons
                   name={isFollowing ? "checkmark" : "add"}
                   size={18}
-                  color={isFollowing ? colours.textSecondary : colours.textPrimary}
+                  color={
+                    isFollowing ? colours.textSecondary : colours.textPrimary
+                  }
                   style={{ marginRight: 6 }}
                 />
                 <Text
@@ -388,7 +406,10 @@ export default function ProfileOrg() {
 
         <View style={styles.tabRow}>
           <TouchableOpacity
-            style={[styles.tabBtn, activeTab === "posts" && styles.tabBtnActive]}
+            style={[
+              styles.tabBtn,
+              activeTab === "posts" && styles.tabBtnActive,
+            ]}
             onPress={() => setActiveTab("posts")}
             activeOpacity={0.85}
           >
@@ -402,7 +423,10 @@ export default function ProfileOrg() {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.tabBtn, activeTab === "events" && styles.tabBtnActive]}
+            style={[
+              styles.tabBtn,
+              activeTab === "events" && styles.tabBtnActive,
+            ]}
             onPress={() => setActiveTab("events")}
             activeOpacity={0.85}
           >
@@ -449,7 +473,9 @@ export default function ProfileOrg() {
           </>
         ) : (
           <>
-            <Text style={styles.eventCountLabel}>Events: {orgEvents.length}</Text>
+            <Text style={styles.eventCountLabel}>
+              Events: {orgEvents.length}
+            </Text>
 
             {loadingEvents ? (
               <Text style={styles.loadingText}>Loading events...</Text>
@@ -471,7 +497,11 @@ export default function ProfileOrg() {
                           style={styles.eventImage}
                         />
                       ) : (
-                        <Ionicons name="image-outline" size={24} color={colours.textMuted} />
+                        <Ionicons
+                          name="image-outline"
+                          size={24}
+                          color={colours.textMuted}
+                        />
                       )}
                     </View>
                     <View style={styles.eventInfo}>
@@ -530,7 +560,11 @@ export default function ProfileOrg() {
                 />
               ) : (
                 <View style={styles.mapFallback}>
-                  <Ionicons name="image-outline" size={40} color={colours.textMuted} />
+                  <Ionicons
+                    name="image-outline"
+                    size={40}
+                    color={colours.textMuted}
+                  />
                 </View>
               )}
             </View>
@@ -632,31 +666,29 @@ const styles = StyleSheet.create({
 
   scrollArea: { flex: 1, paddingHorizontal: 16 },
 
-  avatarWrap: { alignItems: "center", marginTop: 10, marginBottom: 16, paddingHorizontal: 20, paddingVertical: 10 },
-
-  avatarWithGlow: {
-    shadowColor: "#8B5CF6",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.35,
-    shadowRadius: 15,
-    elevation: 8,
-    borderRadius: 999,
+  avatarWrap: {
+    alignItems: "center",
+    marginTop: 10,
+    marginBottom: 16,
+    paddingVertical: 10,
   },
 
-  avatarCircle: {
+  avatarGlow: {
     width: 130,
     height: 130,
-    borderRadius: 999,
+    borderRadius: 65,
     backgroundColor: colours.surface,
-    borderWidth: 2,
-    borderColor: colours.border,
-    overflow: "hidden",
+    shadowColor: "#8B5CF6",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 10,
   },
 
   avatarImage: {
-    width: "100%",
-    height: "100%",
-    resizeMode: "cover",
+    width: 130,
+    height: 130,
+    borderRadius: 65,
   },
 
   statsRow: {

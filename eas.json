@@ -11,9 +11,11 @@
     "preview": {
       "distribution": "internal"
     },
-    "production": {
-      "autoIncrement": true
-    }
+     "production": {                                                                                                                                                              
+    "autoIncrement": true,
+    "env": {
+      "EXPO_PUBLIC_API_URL": "https://universe-app-production.up.railway.app"    }                                                                                                                                                                          
+  } 
   },
   "submit": {
     "production": {}

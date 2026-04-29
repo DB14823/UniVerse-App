@@ -14,8 +14,14 @@ import {
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import * as ImagePicker from "expo-image-picker";
+import { Ionicons } from "@expo/vector-icons";
 import { API_URL } from "../../lib/api";
-import { colours, spacing, borderRadius, shadows } from "../../lib/theme/colours";
+import {
+  colours,
+  spacing,
+  borderRadius,
+  shadows,
+} from "../../lib/theme/colours";
 import ThemedInput from "../components/ThemedInput";
 import ThemedButton from "../components/ThemedButton";
 import CosmicBackground from "../components/CosmicBackground";
@@ -42,7 +48,10 @@ export default function RegisterOrg() {
   const pickEvidence = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert("Permission Required", "Please allow access to your photo library.");
+      Alert.alert(
+        "Permission Required",
+        "Please allow access to your photo library.",
+      );
       return;
     }
 
@@ -83,7 +92,11 @@ export default function RegisterOrg() {
     }
 
     if (!res.ok) {
-      throw new Error(data?.error || data?.message || `Registration failed (HTTP ${res.status})`);
+      throw new Error(
+        data?.error ||
+          data?.message ||
+          `Registration failed (HTTP ${res.status})`,
+      );
     }
 
     if (!data?.token || !data?.user) {
@@ -169,7 +182,7 @@ export default function RegisterOrg() {
 
       await SecureStore.setItemAsync("orgEvidenceUri", evidenceUri);
 
-      Alert.alert("Success", "Organisation account created successfully!");
+      Alert.alert("Welcome!", "Organisation account created successfully.");
       router.replace("../Organisations/eventsOrg");
     } catch (err: any) {
       Alert.alert("Registration failed", err?.message || "Please try again.");
@@ -187,6 +200,14 @@ export default function RegisterOrg() {
       <CosmicBackground />
       <View style={styles.overlay} />
 
+      <TouchableOpacity
+        style={styles.backBtn}
+        onPress={() => router.back()}
+        activeOpacity={0.85}
+      >
+        <Ionicons name="arrow-back" size={20} color={colours.textPrimary} />
+      </TouchableOpacity>
+
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
@@ -196,85 +217,161 @@ export default function RegisterOrg() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Register your organisation</Text>
-
-          <ThemedInput
-            label="Organisation Name"
-            placeholder="Uni Society / Venue / Club"
-            value={orgName}
-            onChangeText={(text) => {
-              setOrgName(text);
-              if (errors.orgName) setErrors({ ...errors, orgName: "" });
-            }}
-            autoCapitalize="words"
-            error={errors.orgName}
-          />
-
-          <ThemedInput
-            label="Organisation Location"
-            placeholder="Street, City"
-            value={orgLocation}
-            onChangeText={(text) => {
-              setOrgLocation(text);
-              if (errors.orgLocation) setErrors({ ...errors, orgLocation: "" });
-            }}
-            autoCapitalize="words"
-            error={errors.orgLocation}
-          />
-
-          <ThemedInput
-            label="Organisation Email"
-            placeholder="org@email.com"
-            value={email}
-            onChangeText={(text) => {
-              setEmail(text);
-              if (errors.email) setErrors({ ...errors, email: "" });
-            }}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            error={errors.email}
-          />
-
-          <ThemedInput
-            label="Create Password"
-            placeholder="Minimum 8 characters"
-            value={password}
-            onChangeText={(text) => {
-              setPassword(text);
-              if (errors.password) setErrors({ ...errors, password: "" });
-            }}
-            secureTextEntry
-            error={errors.password}
-          />
-
-          <Text style={styles.label}>Evidence Photo</Text>
-          <TouchableOpacity style={styles.evidenceBtn} onPress={pickEvidence} activeOpacity={0.85}>
-            <Text style={styles.evidenceBtnText}>{evidenceUri ? "Change Photo" : "Upload Photo"}</Text>
-          </TouchableOpacity>
-
-          {evidenceUri ? (
-            <View style={styles.previewWrap}>
-              <Image source={{ uri: evidenceUri }} style={styles.previewImage} />
-            </View>
-          ) : (
-            <Text style={styles.helperText}>Upload a photo to verify your organisation (placeholder for now).</Text>
-          )}
-
-          <View style={styles.buttonContainer}>
-            <ThemedButton
-              title="Create Account"
-              onPress={handleRegister}
-              loading={loading}
-              variant="primary"
-              size="large"
-              fullWidth
-              glow
-            />
+          <View style={styles.headerSection}>
+            <Text style={styles.title}>Register Org</Text>
+            <Text style={styles.subtitle}>
+              Set up your organisation account
+            </Text>
           </View>
 
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.loginText}>Back to Login</Text>
+          <View style={styles.card}>
+            <View style={styles.sectionHeader}>
+              <Ionicons
+                name="business-outline"
+                size={16}
+                color={colours.secondary}
+              />
+              <Text style={[styles.sectionLabel, { color: colours.secondary }]}>
+                Organisation Details
+              </Text>
+            </View>
+
+            <ThemedInput
+              label="Organisation Name"
+              placeholder="Uni Society / Venue / Club"
+              value={orgName}
+              onChangeText={(text) => {
+                setOrgName(text);
+                if (errors.orgName) setErrors({ ...errors, orgName: "" });
+              }}
+              autoCapitalize="words"
+              error={errors.orgName}
+            />
+
+            <ThemedInput
+              label="Location"
+              placeholder="Street, City"
+              value={orgLocation}
+              onChangeText={(text) => {
+                setOrgLocation(text);
+                if (errors.orgLocation)
+                  setErrors({ ...errors, orgLocation: "" });
+              }}
+              autoCapitalize="words"
+              error={errors.orgLocation}
+            />
+
+            <View style={styles.divider} />
+
+            <View style={styles.sectionHeader}>
+              <Ionicons
+                name="lock-closed-outline"
+                size={16}
+                color={colours.secondary}
+              />
+              <Text style={[styles.sectionLabel, { color: colours.secondary }]}>
+                Account & Security
+              </Text>
+            </View>
+
+            <ThemedInput
+              label="Organisation Email"
+              placeholder="org@email.com"
+              value={email}
+              onChangeText={(text) => {
+                setEmail(text);
+                if (errors.email) setErrors({ ...errors, email: "" });
+              }}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              error={errors.email}
+            />
+
+            <ThemedInput
+              label="Create Password"
+              placeholder="Minimum 8 characters"
+              value={password}
+              onChangeText={(text) => {
+                setPassword(text);
+                if (errors.password) setErrors({ ...errors, password: "" });
+              }}
+              secureTextEntry
+              error={errors.password}
+            />
+
+            <View style={styles.divider} />
+
+            <View style={styles.sectionHeader}>
+              <Ionicons
+                name="shield-checkmark-outline"
+                size={16}
+                color={colours.secondary}
+              />
+              <Text style={[styles.sectionLabel, { color: colours.secondary }]}>
+                Verification
+              </Text>
+            </View>
+
+            <Text style={styles.evidenceDescription}>
+              Upload a photo to verify your organisation (e.g. a society card or
+              official document).
+            </Text>
+
+            <TouchableOpacity
+              style={[
+                styles.evidenceBtn,
+                evidenceUri && styles.evidenceBtnFilled,
+              ]}
+              onPress={pickEvidence}
+              activeOpacity={0.85}
+            >
+              <Ionicons
+                name={evidenceUri ? "checkmark-circle" : "cloud-upload-outline"}
+                size={22}
+                color={evidenceUri ? colours.success : colours.textSecondary}
+              />
+              <Text
+                style={[
+                  styles.evidenceBtnText,
+                  evidenceUri && styles.evidenceBtnTextFilled,
+                ]}
+              >
+                {evidenceUri
+                  ? "Photo selected — tap to change"
+                  : "Upload evidence photo"}
+              </Text>
+            </TouchableOpacity>
+
+            {evidenceUri && (
+              <View style={styles.previewWrap}>
+                <Image
+                  source={{ uri: evidenceUri }}
+                  style={styles.previewImage}
+                />
+              </View>
+            )}
+
+            <View style={styles.buttonContainer}>
+              <ThemedButton
+                title="Create Organisation"
+                onPress={handleRegister}
+                loading={loading}
+                variant="primary"
+                size="large"
+                fullWidth
+                glow
+              />
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={styles.loginLink}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.loginLinkText}>Already have an account? </Text>
+            <Text style={[styles.loginLinkText, styles.loginLinkAccent]}>
+              Sign in
+            </Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -293,62 +390,107 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(5, 8, 16, 0.65)",
+    backgroundColor: "rgba(5, 8, 16, 0.70)",
   },
-  content: {
-    flexGrow: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: spacing.xxxl,
-    paddingTop: spacing.huge,
-    paddingBottom: spacing.xxl,
-  },
-  title: {
-    fontSize: 48,
-    fontWeight: "800",
-    marginBottom: spacing.sm,
-    color: colours.textPrimary,
-    textShadowColor: colours.glow,
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 20,
-  },
-  subtitle: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: colours.textSecondary,
-    marginBottom: spacing.xxxl,
-    letterSpacing: 0.3,
-  },
-  label: {
-    alignSelf: "flex-start",
-    marginLeft: 5,
-    marginBottom: spacing.sm,
-    fontSize: 15,
-    fontWeight: "600",
-    color: colours.textPrimary,
-  },
-  evidenceBtn: {
+  backBtn: {
+    position: "absolute",
+    top: 60,
+    left: 20,
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.full,
     backgroundColor: colours.glass,
-    width: "100%",
-    height: 56,
-    borderRadius: borderRadius.lg,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: spacing.md,
+    zIndex: 10,
     borderWidth: 1.5,
     borderColor: colours.border,
   },
-  evidenceBtnText: {
-    color: colours.textPrimary,
-    fontSize: 16,
-    fontWeight: "700",
+  content: {
+    flexGrow: 1,
+    alignItems: "center",
+    paddingHorizontal: spacing.xxxl,
+    paddingTop: 120,
+    paddingBottom: spacing.xxl,
   },
-  helperText: {
-    width: "100%",
+  headerSection: {
+    alignItems: "center",
+    marginBottom: spacing.xxl,
+  },
+  title: {
+    fontSize: 40,
+    fontWeight: "800",
+    color: colours.textPrimary,
+    textShadowColor: colours.glowCyan,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 20,
+    marginBottom: spacing.xs,
+  },
+  subtitle: {
+    fontSize: 15,
+    fontWeight: "500",
     color: colours.textSecondary,
+    letterSpacing: 0.3,
+  },
+  card: {
+    width: "100%",
+    backgroundColor: "rgba(10, 14, 31, 0.75)",
+    borderRadius: borderRadius.xl,
+    borderWidth: 1.5,
+    borderColor: "rgba(6, 182, 212, 0.15)",
+    padding: spacing.xxl,
+    marginBottom: spacing.xl,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: spacing.md,
+    gap: spacing.sm,
+  },
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "rgba(6, 182, 212, 0.1)",
+    marginVertical: spacing.lg,
+  },
+  evidenceDescription: {
     fontSize: 13,
+    color: colours.textMuted,
     marginBottom: spacing.md,
     lineHeight: 18,
+  },
+  evidenceBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    backgroundColor: colours.surface,
+    width: "100%",
+    minHeight: 56,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    borderWidth: 1.5,
+    borderColor: colours.border,
+    borderStyle: "dashed",
+  },
+  evidenceBtnFilled: {
+    borderStyle: "solid",
+    borderColor: colours.success,
+    backgroundColor: "rgba(16, 185, 129, 0.08)",
+  },
+  evidenceBtnText: {
+    color: colours.textSecondary,
+    fontSize: 15,
+    fontWeight: "600",
+    flex: 1,
+  },
+  evidenceBtnTextFilled: {
+    color: colours.success,
   },
   previewWrap: {
     width: "100%",
@@ -360,19 +502,26 @@ const styles = StyleSheet.create({
   },
   previewImage: {
     width: "100%",
-    height: 180,
+    height: 160,
     resizeMode: "cover",
   },
   buttonContainer: {
-    marginTop: spacing.lg,
-    marginBottom: spacing.lg,
     width: "100%",
+    marginTop: spacing.sm,
   },
-  loginText: {
-    marginTop: spacing.md,
-    fontSize: 15,
+  loginLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: spacing.sm,
+  },
+  loginLinkText: {
+    fontSize: 14,
     color: colours.textSecondary,
+    fontWeight: "500",
+  },
+  loginLinkAccent: {
+    color: colours.secondary,
+    fontWeight: "700",
     textDecorationLine: "underline",
-    fontWeight: "600",
   },
 });

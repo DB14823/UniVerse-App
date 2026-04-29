@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ImageBackground } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ImageBackground,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Asset } from "expo-asset";
@@ -8,14 +14,12 @@ import { colours } from "../lib/theme/colours";
 import ThemedButton from "./components/ThemedButton";
 import CosmicBackground from "./components/CosmicBackground";
 
-
-
 export default function Index() {
   const router = useRouter();
   const [checkingAuth, setCheckingAuth] = useState(true);
   useEffect(() => {
-  Asset.fromModule(require("../assets/images/Space.png")).downloadAsync();
-}, []);
+    Asset.fromModule(require("../assets/images/Space.png")).downloadAsync();
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -78,7 +82,7 @@ export default function Index() {
               <ThemedButton
                 title="Login as Student"
                 onPress={() => router.push("../auth/loginStudent")}
-                variant="success"
+                variant="primary"
                 size="large"
                 fullWidth
                 glow
@@ -89,7 +93,7 @@ export default function Index() {
               <ThemedButton
                 title="Login as Organisation"
                 onPress={() => router.push("../auth/loginOrg")}
-                variant="primary"
+                variant="secondary"
                 size="large"
                 fullWidth
                 glow

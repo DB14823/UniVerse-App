@@ -11,10 +11,13 @@ import {
   TextInput,
   ScrollView,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import * as ImagePicker from "expo-image-picker";
+import ImageCropPicker from "react-native-image-crop-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { clearSession } from "../../lib/auth";
 import {
@@ -99,33 +102,26 @@ export default function ProfileOrgSettings() {
       setNotifications(!value);
       Alert.alert(
         "Error",
-        "Failed to update notification settings. Please try again."
+        "Failed to update notification settings. Please try again.",
       );
     }
   };
 
   const handlePickProfileImage = async () => {
-    const permissionResult =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (!permissionResult.granted) {
-      Alert.alert(
-        "Permission Required",
-        "Please allow access to your photo library."
-      );
+    let image;
+    try {
+      image = await ImageCropPicker.openPicker({
+        width: 400,
+        height: 400,
+        cropping: true,
+        cropperCircleOverlay: true,
+        compressImageQuality: 0.8,
+      });
+    } catch {
       return;
     }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (result.canceled || !result.assets[0]) return;
-
-    const nextUri = result.assets[0].uri;
+    const nextUri = image.path;
     const previousUri = profileImageUri;
 
     try {
@@ -142,7 +138,7 @@ export default function ProfileOrgSettings() {
       setProfileImageUri(previousUri || null);
       Alert.alert(
         "Error",
-        error.message || "Failed to update profile picture."
+        error.message || "Failed to update profile picture.",
       );
     } finally {
       setUploading(false);
@@ -150,22 +146,18 @@ export default function ProfileOrgSettings() {
   };
 
   const handleLogout = async () => {
-    Alert.alert(
-      "Logout",
-      "Are you sure you want to logout?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Logout",
-          style: "destructive",
-          onPress: async () => {
-            await clearSession();
-            router.dismissAll();
-            router.replace("/");
-          },
+    Alert.alert("Logout", "Are you sure you want to logout?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Logout",
+        style: "destructive",
+        onPress: async () => {
+          await clearSession();
+          router.dismissAll();
+          router.replace("/");
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleChangePassword = async () => {
@@ -215,7 +207,7 @@ export default function ProfileOrgSettings() {
       [
         { text: "Cancel", style: "cancel" },
         { text: "Delete", style: "destructive", onPress: handleDeleteAccount },
-      ]
+      ],
     );
   };
 
@@ -250,7 +242,10 @@ export default function ProfileOrgSettings() {
           <View style={styles.avatarContainer}>
             <View style={styles.avatarCircle}>
               {profileImageUri && (
-                <Image source={{ uri: profileImageUri }} style={styles.avatarImage} />
+                <Image
+                  source={{ uri: profileImageUri }}
+                  style={styles.avatarImage}
+                />
               )}
               {!profileImageUri && (
                 <Ionicons name="business" size={50} color={colours.textMuted} />
@@ -260,9 +255,7 @@ export default function ProfileOrgSettings() {
               <Ionicons name="pencil" size={14} color={colours.textPrimary} />
             </View>
           </View>
-          {username ? (
-            <Text style={styles.username}>{username}</Text>
-          ) : null}
+          {username ? <Text style={styles.username}>{username}</Text> : null}
           <Text style={styles.editText}>
             {uploading ? "Saving..." : "Tap to change logo"}
           </Text>
@@ -308,7 +301,12 @@ export default function ProfileOrgSettings() {
             onPress={handleChangePassword}
             disabled={savingPassword}
           >
-            <Ionicons name="checkmark-circle" size={18} color={colours.textPrimary} style={{ marginRight: 8 }} />
+            <Ionicons
+              name="checkmark-circle"
+              size={18}
+              color={colours.textPrimary}
+              style={{ marginRight: 8 }}
+            />
             <Text style={styles.saveBtnText}>
               {savingPassword ? "Saving..." : "Update password"}
             </Text>
@@ -319,14 +317,21 @@ export default function ProfileOrgSettings() {
         <Text style={styles.sectionHeader}>preferences</Text>
         <View style={[styles.row, styles.rowSplit]}>
           <View style={styles.rowLeft}>
-            <Ionicons name="notifications" size={22} color={colours.secondary} style={{ marginRight: 12 }} />
+            <Ionicons
+              name="notifications"
+              size={22}
+              color={colours.secondary}
+              style={{ marginRight: 12 }}
+            />
             <Text style={styles.rowText}>Notifications</Text>
           </View>
           <Switch
             value={notifications}
             onValueChange={handleNotificationToggle}
             trackColor={{ false: colours.border, true: colours.secondary }}
-            thumbColor={Platform.OS === "android" ? colours.textPrimary : undefined}
+            thumbColor={
+              Platform.OS === "android" ? colours.textPrimary : undefined
+            }
             ios_backgroundColor={colours.border}
             disabled={loadingSettings}
           />
@@ -335,7 +340,12 @@ export default function ProfileOrgSettings() {
         {/* Danger Zone */}
         <Text style={styles.sectionHeaderDanger}>danger zone</Text>
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-          <Ionicons name="log-out-outline" size={22} color={colours.secondary} style={{ marginRight: 12 }} />
+          <Ionicons
+            name="log-out-outline"
+            size={22}
+            color={colours.secondary}
+            style={{ marginRight: 12 }}
+          />
           <Text style={styles.logoutText}>logout</Text>
         </TouchableOpacity>
 
@@ -344,7 +354,12 @@ export default function ProfileOrgSettings() {
           onPress={confirmDelete}
           disabled={deletingAccount}
         >
-          <Ionicons name="trash" size={20} color="#ff3b30" style={{ marginRight: 10 }} />
+          <Ionicons
+            name="trash"
+            size={20}
+            color="#ff3b30"
+            style={{ marginRight: 10 }}
+          />
           <Text style={styles.deleteText}>
             {deletingAccount ? "Deleting..." : "delete account"}
           </Text>

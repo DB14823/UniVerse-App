@@ -75,9 +75,14 @@ export default function BottomNavOrg({ activeTab, onTabPress }: Props) {
               <Ionicons
                 name={isActive ? tab.icon : (`${tab.icon}-outline` as any)}
                 size={22}
-                color={isActive ? colours.primary : colours.textMuted}
+                color={isActive ? colours.secondary : colours.textMuted}
               />
-              <Text style={[styles.navButtonText, isActive && styles.navButtonTextActive]}>
+              <Text
+                style={[
+                  styles.navButtonText,
+                  isActive && styles.navButtonTextActive,
+                ]}
+              >
                 {tab.label}
               </Text>
               {isActive && <View style={styles.activeDot} />}
@@ -125,7 +130,7 @@ const styles = StyleSheet.create({
   },
 
   navButtonTextActive: {
-    color: colours.primary,
+    color: colours.secondary,
     fontWeight: "700",
   },
 
@@ -133,7 +138,7 @@ const styles = StyleSheet.create({
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: colours.primary,
+    backgroundColor: colours.secondary,
     position: "absolute",
     bottom: -2,
   },

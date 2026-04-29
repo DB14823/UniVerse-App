@@ -18,8 +18,6 @@ export async function clearSession(): Promise<void> {
     SecureStore.deleteItemAsync("authToken"),
     SecureStore.deleteItemAsync("userId"),
     SecureStore.deleteItemAsync("username"),
-    SecureStore.deleteItemAsync("userEmail"),
-    SecureStore.deleteItemAsync("userPassword"),
     SecureStore.deleteItemAsync("userRole"),
     SecureStore.deleteItemAsync("role"),
   ]);

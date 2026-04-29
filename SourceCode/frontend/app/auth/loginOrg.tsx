@@ -4,13 +4,13 @@ import {
   Text,
   StyleSheet,
   Alert,
-  Switch,
   ImageBackground,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
 import { useRouter } from "expo-router";
 import { API_URL } from "../../lib/api";
@@ -70,7 +70,9 @@ export default function LoginOrganisation() {
 
     if (!response.ok) {
       throw new Error(
-        data?.error || data?.message || `Login failed (HTTP ${response.status})`
+        data?.error ||
+          data?.message ||
+          `Login failed (HTTP ${response.status})`,
       );
     }
 
@@ -214,15 +216,20 @@ export default function LoginOrganisation() {
             error={passwordError}
           />
 
-          <View style={styles.rememberRow}>
-            <Switch
-              value={rememberMe}
-              onValueChange={setRememberMe}
-              trackColor={{ false: colours.border, true: colours.success }}
-              thumbColor="#fff"
-            />
+          <TouchableOpacity
+            style={styles.rememberRow}
+            onPress={() => setRememberMe((v) => !v)}
+            activeOpacity={0.7}
+          >
+            <View
+              style={[styles.checkbox, rememberMe && styles.checkboxChecked]}
+            >
+              {rememberMe && (
+                <Ionicons name="checkmark" size={13} color="#fff" />
+              )}
+            </View>
             <Text style={styles.rememberText}>Remember me</Text>
-          </View>
+          </TouchableOpacity>
 
           <View style={styles.buttonContainer}>
             <ThemedButton
@@ -238,7 +245,10 @@ export default function LoginOrganisation() {
 
           <Text style={styles.signupText}>
             Need an account?{" "}
-            <Text style={styles.link} onPress={() => router.push("../auth/registerOrg")}>
+            <Text
+              style={styles.link}
+              onPress={() => router.push("../auth/registerOrg")}
+            >
               Register
             </Text>
           </Text>
@@ -310,6 +320,20 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     marginBottom: spacing.lg,
     marginTop: spacing.sm,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: colours.border,
+    backgroundColor: colours.surface,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  checkboxChecked: {
+    backgroundColor: colours.success,
+    borderColor: colours.success,
   },
   rememberText: {
     marginLeft: spacing.md,

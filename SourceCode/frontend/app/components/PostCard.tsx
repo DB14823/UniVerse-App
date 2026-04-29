@@ -108,7 +108,7 @@ export default function PostCard({
         <Text key={i} style={styles.captionTextInline}>
           {p.text}
         </Text>
-      )
+      ),
     );
   }, [caption, onHashtagPress]);
 
@@ -153,15 +153,11 @@ export default function PostCard({
           onPress={handleToggleLike}
           activeOpacity={0.8}
         >
-          <Text style={[styles.likeIcon, liked && styles.likeIconOn]}>
-            ♥
-          </Text>
+          <Text style={[styles.likeIcon, liked && styles.likeIconOn]}>♥</Text>
         </TouchableOpacity>
 
         <View style={styles.likeMeta}>
-          <Text style={styles.likeCount}>
-            {likeCount.toString()}
-          </Text>
+          <Text style={styles.likeCount}>{likeCount.toString()}</Text>
         </View>
 
         <TouchableOpacity
@@ -169,13 +165,15 @@ export default function PostCard({
           onPress={onPress}
           activeOpacity={0.8}
         >
-          <Ionicons name="chatbubble-outline" size={18} color={colours.textSecondary} />
+          <Ionicons
+            name="chatbubble-outline"
+            size={18}
+            color={colours.textSecondary}
+          />
         </TouchableOpacity>
 
         <View style={styles.commentMeta}>
-          <Text style={styles.commentCount}>
-            {commentCount.toString()}
-          </Text>
+          <Text style={styles.commentCount}>{commentCount.toString()}</Text>
         </View>
 
         <Text style={styles.captionText} numberOfLines={2}>
@@ -225,16 +223,21 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   verifiedBadge: {
-    backgroundColor: colours.accent,
-    borderRadius: 8,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: colours.success,
+    borderWidth: 1,
+    borderColor: colours.border,
+    alignItems: "center",
+    justifyContent: "center",
     marginLeft: 6,
   },
   verifiedText: {
-    color: "#fff",
-    fontSize: 11,
-    fontWeight: "700",
+    color: "#0b2a17",
+    fontSize: 12,
+    fontWeight: "900",
+    marginTop: -1,
   },
   mediaCard: {
     aspectRatio: 1,

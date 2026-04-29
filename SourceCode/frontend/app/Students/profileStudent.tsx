@@ -9,12 +9,26 @@ import {
   Image,
   ActivityIndicator,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { Image as ExpoImage } from "expo-image";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { Ionicons } from "@expo/vector-icons";
-import { getUserPosts, getCurrentUser, getUserProfile, Post } from "../../lib/postsApi";
-import { followUser, unfollowUser, checkFollowing, getFollowCounts } from "../../lib/followApi";
+import {
+  getUserPosts,
+  getCurrentUser,
+  getUserProfile,
+  Post,
+} from "../../lib/postsApi";
+import {
+  followUser,
+  unfollowUser,
+  checkFollowing,
+  getFollowCounts,
+} from "../../lib/followApi";
 import { colours } from "../../lib/theme/colours";
 
 export default function ProfileStudent() {
@@ -39,7 +53,7 @@ export default function ProfileStudent() {
 
   const totalLikes = useMemo(
     () => userPosts.reduce((sum, post) => sum + (post.likeCount ?? 0), 0),
-    [userPosts]
+    [userPosts],
   );
 
   const normalizeParam = (value?: string | string[]) =>
@@ -48,7 +62,8 @@ export default function ProfileStudent() {
   const routeUserId = normalizeParam(params.userId) || null;
   const routeUsername = normalizeParam(params.username) || null;
   const routeViewerRole = normalizeParam(params.viewerRole) || null;
-  const viewingOther = Boolean(routeUserId) || routeViewerRole === "ORGANISATION";
+  const viewingOther =
+    Boolean(routeUserId) || routeViewerRole === "ORGANISATION";
 
   const handleBackPress = useCallback(() => {
     if (routeViewerRole === "ORGANISATION") {
@@ -64,7 +79,7 @@ export default function ProfileStudent() {
 
   const loadUserProfile = async (
     targetUserId: string | null,
-    targetUsername: string | null
+    targetUsername: string | null,
   ) => {
     try {
       setLoading(true);
@@ -198,12 +213,14 @@ export default function ProfileStudent() {
         }
       >
         <View style={styles.avatarWrap}>
-          <View style={styles.avatarWithGlow}>
-            <View style={styles.avatarCircle}>
-              {profileImageUri ? (
-                <Image source={{ uri: profileImageUri }} style={styles.avatarImage} />
-              ) : null}
-            </View>
+          <View style={styles.avatarGlow}>
+            {profileImageUri ? (
+              <ExpoImage
+                source={{ uri: profileImageUri }}
+                style={styles.avatarImage}
+                contentFit="cover"
+              />
+            ) : null}
           </View>
         </View>
 
@@ -227,10 +244,7 @@ export default function ProfileStudent() {
 
         {viewingOther && userId && (
           <TouchableOpacity
-            style={[
-              styles.followBtn,
-              isFollowing ? styles.followingBtn : null,
-            ]}
+            style={[styles.followBtn, isFollowing ? styles.followingBtn : null]}
             onPress={handleFollowPress}
             disabled={followLoading}
             activeOpacity={0.85}
@@ -242,7 +256,9 @@ export default function ProfileStudent() {
                 <Ionicons
                   name={isFollowing ? "checkmark" : "add"}
                   size={18}
-                  color={isFollowing ? colours.textSecondary : colours.textPrimary}
+                  color={
+                    isFollowing ? colours.textSecondary : colours.textPrimary
+                  }
                   style={{ marginRight: 6 }}
                 />
                 <Text
@@ -262,7 +278,11 @@ export default function ProfileStudent() {
           <Text style={styles.loadingText}>Loading posts...</Text>
         ) : userPosts.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="images-outline" size={48} color={colours.textMuted} />
+            <Ionicons
+              name="images-outline"
+              size={48}
+              color={colours.textMuted}
+            />
             <Text style={styles.emptyStateText}>No posts yet</Text>
             <Text style={styles.emptyStateSubtext}>Posts will appear here</Text>
           </View>
@@ -290,8 +310,6 @@ export default function ProfileStudent() {
           </View>
         )}
       </ScrollView>
-
-     
     </SafeAreaView>
   );
 }
@@ -355,31 +373,29 @@ const styles = StyleSheet.create({
 
   scrollArea: { flex: 1, paddingHorizontal: 16 },
 
-  avatarWrap: { alignItems: "center", marginTop: 10, marginBottom: 16, paddingHorizontal: 20, paddingVertical: 10 },
-
-  avatarWithGlow: {
-    shadowColor: "#8B5CF6",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.35,
-    shadowRadius: 15,
-    elevation: 8,
-    borderRadius: 999,
+  avatarWrap: {
+    alignItems: "center",
+    marginTop: 10,
+    marginBottom: 16,
+    paddingVertical: 10,
   },
 
-  avatarCircle: {
+  avatarGlow: {
     width: 130,
     height: 130,
-    borderRadius: 999,
+    borderRadius: 65,
     backgroundColor: colours.surface,
-    borderWidth: 2,
-    borderColor: colours.border,
-    overflow: "hidden",
+    shadowColor: "#8B5CF6",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 10,
   },
 
   avatarImage: {
-    width: "100%",
-    height: "100%",
-    resizeMode: "cover",
+    width: 130,
+    height: 130,
+    borderRadius: 65,
   },
 
   statsRow: {
