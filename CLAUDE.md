@@ -58,16 +58,21 @@ Run `npm run env:init` from root to bootstrap `.env` files from `.env.example`.
 ## Architecture Notes
 
 - **Expo Router**: File-based routing under `app/`. Subdirectories map directly to navigation routes. Moving files breaks navigation.
-- **Auth**: JWT stored via `expo-secure-store`. Middleware in `SourceCode/backend/src/middleware/` validates tokens.
+- **Auth**: JWT stored via `expo-secure-store` under key `"authToken"`. Student ID stored under key `"userId"`. Middleware in `SourceCode/backend/src/middleware/` validates tokens.
 - **Image uploads**: Base64-encoded in JSON payloads (10 MB limit set in backend).
 - **Stripe**: PaymentSheet integration for paid events. Use test card `4242 4242 4242 4242` in dev.
 - **Prisma client**: Import from `SourceCode/backend/src/utils/prisma.ts`. Run `prisma:generate` after any schema change.
 - **Role-based routing**: Users are either `STUDENT` or `ORGANISATION`. Screens under `Students/` and `Organisations/` are role-gated.
+- **Role middleware**: The export from `SourceCode/backend/src/middleware/roleMiddleware.ts` is named `requireRole` (not `roleMiddleware`). Usage: `requireRole("STUDENT")`.
+- **Socket.io**: Integrated into Express via `http.createServer(app)` in `server.ts`. Real-time DMs use private rooms per student (`room:<studentId>`). Socket server at `SourceCode/backend/src/socket/index.ts` — exports `initSocket(httpServer)` and singleton `io`. JWT auth on handshake via `socket.handshake.auth.token`.
+- **Direct Messages**: Students-only, mutual follow required to initiate. Conversation uniqueness enforced via canonical UUID pair ordering (`a < b ? [a, b] : [b, a]`). REST routes at `/messages/*` (requires auth + `requireRole("STUDENT")`). Client emits: `send_message`, `typing`, `react_message`. Server emits: `new_message`, `typing`, `message_reaction`. Push notification fallback when recipient socket room is empty.
 
 ## Git Conventions
 
 - Branch naming: `feature/xxx`, `fix/xxx`, `chore/xxx`
 - Keep PRs focused; target `main`
+- Remote `origin` → `https://github.com/DB14823/UniVerse-App.git` (personal repo — always push here)
+- Remote `upstream` → Plymouth University template repo (ignore, do not push)
 
 ## Deployment
 
@@ -88,6 +93,9 @@ Run `npm run env:init` from root to bootstrap `.env` files from `.env.example`.
 - Maps: uses `react-native-maps` with Apple Maps (no API key needed on iOS). Geocoding via Nominatim in `lib/staticMaps.ts`.
 - Calendar: `lib/calendar.ts` prompts user to pick a calendar via Alert before adding events.
 - `KeyboardAvoidingView` with `behavior="padding"` wraps ScrollViews on screens with TextInput to prevent keyboard overlap.
+- **Colour theme**: tokens are `textPrimary`, `textSecondary`, `textMuted`, `textAccent`, `primary`, `surface`, `background`, `border`. There is no `colours.text` — use `colours.textPrimary`.
+- **Socket singleton**: `app/hooks/useSocket.ts` — `useSocket()` mounts the connection (call in `_layout.tsx`); `getSocket()` lets screens emit events without re-subscribing. Module-level singleton pattern with `active = false` cleanup for React Strict Mode safety.
+- **Chat pagination**: `conversation.tsx` uses `onScroll` with `contentOffset.y < 80` + `scrollEventThrottle={200}` to detect scroll-to-top and load older messages. Do NOT use `onEndReached` — it fires at the bottom (newest messages) of a non-inverted list, which is the wrong end for loading history.
 
 ## Known Issues
 
@@ -102,7 +110,7 @@ Issues identified 2026-05-09. Fix before onboarding real users.
 
 - **No rate limiting** — auth endpoints (`/auth/login-student`, `/auth/login-org`) have no brute-force protection. Add `express-rate-limit` (e.g. 10 attempts / 15 min / IP).
 - **CORS wide open** — `app.use(cors())` in `server.ts` allows all origins. Lock down to actual app domains before production.
-- **No university email validation** — any email can register as a student. Enforce `.ac.uk` (or configurable per-university domain) on `/auth/register-student`.
+- **No email domain validation** — any email can register as a student. For a multi-university commercial product, enforce a configurable domain allowlist on `/auth/register-student` rather than hardcoding `.ac.uk`.
 - **No input validation** — post captions, event titles, comments have no server-side length limits. Add max-length checks to prevent abuse.
 - **Login errors leak user existence** — `"Student not found"` and `"Invalid password"` are separate responses; both should return generic `"Invalid credentials"` to prevent email enumeration.
 
