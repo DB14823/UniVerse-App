@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 UniVerse is a React Native social platform for university students and organisations. Students discover events, follow orgs, and interact via posts. Organisations manage events (including paid ticketing via Stripe).
 
+**Commercial status (2026-05-09):** Won best project at uni showcase. IP is retained by the founders and the app is being taken forward as a real commercial product. The name "UniVerse" is legally blocked (UK trademark conflict, Apple App Store rejected). A rebrand is in progress — see naming research in memory. Do not assume the app will continue to be called UniVerse.
+
 ## Monorepo Structure
 
 ```
@@ -90,7 +92,33 @@ Run `npm run env:init` from root to bootstrap `.env` files from `.env.example`.
 ## Known Issues
 
 - Push notifications are fully functional end-to-end (APNs key configured, cron reminders, follow/like/comment/booking triggers). Requires EAS preview build — local Xcode builds lack the `aps-environment` entitlement.
-- Organisation verification badge shows for all orgs regardless of verified status.
+- Organisation verification badge shows for all orgs regardless of verified status — `Organisation` model has no `verified` boolean; needs a migration and real badge logic.
+
+## Production Readiness — Outstanding Issues
+
+Issues identified 2026-05-09. Fix before onboarding real users.
+
+### 🔴 Critical
+
+- **No rate limiting** — auth endpoints (`/auth/login-student`, `/auth/login-org`) have no brute-force protection. Add `express-rate-limit` (e.g. 10 attempts / 15 min / IP).
+- **CORS wide open** — `app.use(cors())` in `server.ts` allows all origins. Lock down to actual app domains before production.
+- **No university email validation** — any email can register as a student. Enforce `.ac.uk` (or configurable per-university domain) on `/auth/register-student`.
+- **No input validation** — post captions, event titles, comments have no server-side length limits. Add max-length checks to prevent abuse.
+- **Login errors leak user existence** — `"Student not found"` and `"Invalid password"` are separate responses; both should return generic `"Invalid credentials"` to prevent email enumeration.
+
+### 🟡 Important
+
+- **No password strength enforcement** — any string is accepted. Add minimum length (8+ chars) before `bcrypt.hash`.
+- **No token revocation** — stolen JWTs are valid for 7 days with no way to invalidate. Add a refresh token flow or Redis-backed blocklist.
+- **Base64 image uploads won't scale** — 10MB JSON body limit works but is inefficient (base64 adds ~33% overhead). Move to signed Cloudinary direct uploads from the client.
+- **No `helmet` middleware** — add `helmet()` to `server.ts` for standard security headers (`X-Frame-Options`, CSP, etc.). One-liner.
+- **Stripe still in test mode** — swap to live Stripe keys before taking real payments; test full payment flow end-to-end with a real card first.
+
+### 🟢 Before wider rollout
+
+- **Privacy policy and Terms of Service** — legally required before App Store listing and real payments.
+- **GDPR data export** — `DELETE /auth/me` exists but users need a data export endpoint too. Surface the deletion option clearly in UI settings.
+- **Verified org badge** — see Known Issues above; needs `verified` field migration and admin flow to grant verification.
 
 ## TypeScript
 

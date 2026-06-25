@@ -24,6 +24,13 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {},
+    "preview": {
+      "ios": {
+        "appleId": "dyl.j.bennett@icloud.com",
+        "ascAppId": "6764523739",
+        "appleTeamId": "W627943DX4"
+      }
+    }
   }
 }
