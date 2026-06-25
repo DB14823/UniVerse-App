@@ -12,5 +12,10 @@ export default function SocialOrg() {
 
   useTabRefresh(refresh);
 
-  return <SocialFeed refreshTrigger={refreshPosts.toString()} />;
+  return (
+    <SocialFeed
+      refreshTrigger={refreshPosts.toString()}
+      createPostPath="/Organisations/createPost"
+    />
+  );
 }

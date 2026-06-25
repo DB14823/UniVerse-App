@@ -80,7 +80,6 @@ export default function CreatePost() {
 
     try {
       await addPost(caption, imageUri);
-      // clear form after successful post
       setCaption("");
       setImageUri(null);
 
@@ -206,7 +205,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colours.background,
   },
-
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -240,14 +238,12 @@ const styles = StyleSheet.create({
   headerSpacer: {
     width: 40,
   },
-
   content: {
     flex: 1,
   },
   contentInner: {
     padding: 16,
   },
-
   imageSection: {
     marginBottom: 20,
   },
@@ -298,7 +294,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginTop: 8,
   },
-
   buttonRow: {
     flexDirection: "row",
     gap: 12,
@@ -325,7 +320,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 8,
   },
-
   captionSection: {
     marginBottom: 24,
   },
@@ -351,7 +345,6 @@ const styles = StyleSheet.create({
     textAlign: "right",
     marginTop: 6,
   },
-
   postBtn: {
     backgroundColor: colours.primary,
     borderRadius: 16,

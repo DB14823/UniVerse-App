@@ -49,6 +49,7 @@ export default function OrganisationsLayout() {
       <Tabs.Screen name="createEvent" options={{ href: null }} />
       <Tabs.Screen name="scanTickets" options={{ href: null }} />
       <Tabs.Screen name="socialOrg" options={{ href: null }} />
+      <Tabs.Screen name="createPost" options={{ href: null }} />
       <Tabs.Screen name="profileOrg" options={{ href: null }} />
       <Tabs.Screen name="profileStudent" options={{ href: null }} />
     </Tabs>

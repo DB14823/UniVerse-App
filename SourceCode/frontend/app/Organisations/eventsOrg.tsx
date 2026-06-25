@@ -17,6 +17,7 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   ScrollView,
+  Image,
 } from "react-native";
 import FilterBar from "../components/FilterBar";
 import EventCard from "../components/EventCard";
