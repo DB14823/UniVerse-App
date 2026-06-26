@@ -1,0 +1,7 @@
+{
+  "name": "liquid-glass-tab-bar",
+  "version": "1.0.0",
+  "description": "Native liquid glass tab bar for UniVerse",
+  "main": "index.ts",
+  "license": "MIT"
+}
