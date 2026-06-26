@@ -42,11 +42,8 @@ export async function registerForPushNotifications(): Promise<string | null> {
   });
   const token = tokenData.data;
 
-  const cached = await SecureStore.getItemAsync(PUSH_TOKEN_KEY);
-  if (cached !== token) {
-    await registerPushToken(token);
-    await SecureStore.setItemAsync(PUSH_TOKEN_KEY, token);
-  }
+  await registerPushToken(token);
+  await SecureStore.setItemAsync(PUSH_TOKEN_KEY, token);
 
   return token;
 }
