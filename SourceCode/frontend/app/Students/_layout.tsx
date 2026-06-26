@@ -4,7 +4,7 @@ import { Tabs, usePathname, useRouter } from "expo-router";
 import { registerForPushNotifications } from "../../lib/notifications";
 import { fetchConversations } from "../../lib/messagesApi";
 import { useSocket } from "../hooks/useSocket";
-import BottomNavStudent from "../components/BottomNavStudent";
+import LiquidGlassTabBar from "../components/LiquidGlassTabBar";
 
 export default function StudentsLayout() {
   const pathname = usePathname();
@@ -58,7 +58,8 @@ export default function StudentsLayout() {
     <Tabs
       screenOptions={{ headerShown: false }}
       tabBar={() => (
-        <BottomNavStudent
+        <LiquidGlassTabBar
+          role="student"
           activeTab={activeTab}
           unreadMessageCount={unreadCount}
           onTabPress={(tab) => {

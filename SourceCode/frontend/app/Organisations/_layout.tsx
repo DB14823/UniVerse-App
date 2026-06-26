@@ -1,7 +1,7 @@
 import React, { useMemo, useEffect } from "react";
 import { Tabs, usePathname, useRouter } from "expo-router";
 import { registerForPushNotifications } from "../../lib/notifications";
-import BottomNavOrg from "../components/BottomNavOrg";
+import LiquidGlassTabBar from "../components/LiquidGlassTabBar";
 
 export default function OrganisationsLayout() {
   const pathname = usePathname();
@@ -33,7 +33,8 @@ export default function OrganisationsLayout() {
         headerShown: false,
       }}
       tabBar={() => (
-        <BottomNavOrg
+        <LiquidGlassTabBar
+          role="org"
           activeTab={activeTab}
           onTabPress={(tab) => {
             if (tab === activeTab) {
