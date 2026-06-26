@@ -80,7 +80,7 @@ Run `npm run env:init` from root to bootstrap `.env` files from `.env.example`.
 - **Database**: Railway-hosted PostgreSQL. Internal URL only works within Railway — use `DATABASE_PUBLIC_URL` for local access.
 - **Frontend**: EAS preview builds distributed internally. `EXPO_PUBLIC_*` vars are baked into the JS bundle at build time — they must be set in `eas.json` under `build.preview.env`, NOT just in `.env` (which is gitignored and not uploaded to EAS).
 - **OTA updates**: `npx eas update --branch preview --message "..."` — only works for JS changes. Requires `"channel": "preview"` in the `eas.json` preview profile or updates won't be received by the device.
-- **Full rebuild required for**: new native packages, changes to `app.json`, changes to `eas.json` env vars.
+- **Full rebuild required for**: new native packages, changes to `app.json`, changes to `eas.json` env vars, any changes to Swift files in `modules/`.
 
 ## Migration Gotchas
 
@@ -96,6 +96,8 @@ Run `npm run env:init` from root to bootstrap `.env` files from `.env.example`.
 - **Colour theme**: tokens are `textPrimary`, `textSecondary`, `textMuted`, `textAccent`, `primary`, `surface`, `background`, `border`. There is no `colours.text` — use `colours.textPrimary`.
 - **Socket singleton**: `app/hooks/useSocket.ts` — `useSocket()` mounts the connection (call in `_layout.tsx`); `getSocket()` lets screens emit events without re-subscribing. Module-level singleton pattern with `active = false` cleanup for React Strict Mode safety.
 - **Chat pagination**: `conversation.tsx` uses `onScroll` with `contentOffset.y < 80` + `scrollEventThrottle={200}` to detect scroll-to-top and load older messages. Do NOT use `onEndReached` — it fires at the bottom (newest messages) of a non-inverted list, which is the wrong end for loading history.
+- **Push token registration**: `registerForPushNotifications()` in `lib/notifications.ts` always calls the backend on every app launch — there is no local cache guard. Do NOT re-add the `if (cached !== token)` check. The backend handles duplicate registrations efficiently, and the cache previously caused silent failures when the Railway DB lost push token records.
+- **Native modules**: A local Expo native module lives (or will live) in `SourceCode/frontend/modules/`. Each module has a `.podspec` and is linked via a `file:` entry in `package.json`. Swift source changes require an EAS rebuild — they cannot OTA. For iteration before EAS, open `ios/UniVerse.xcworkspace` in Xcode and build locally. **In progress:** `modules/liquid-glass-tab-bar/` — iOS 26 `UIGlassEffect` floating pill tab bar. Plan: `docs/superpowers/plans/2026-06-25-liquid-glass-tab-bar.md`.
 
 ## Known Issues
 
