@@ -192,6 +192,7 @@ export default function ProfileStudent() {
           conversationId: conversation.id,
           otherName: username,
           otherStudentId: userId,
+          otherProfileImageUrl: profileImageUri ?? "",
         },
       } as any);
     } catch (error) {

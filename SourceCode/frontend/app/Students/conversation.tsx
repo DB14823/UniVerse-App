@@ -10,8 +10,10 @@ import {
   Platform,
   ActivityIndicator,
   Modal,
+  Image,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
 import { colours } from "../../lib/theme/colours";
@@ -37,10 +39,14 @@ function groupReactions(
 
 export default function ConversationScreen() {
   const router = useRouter();
-  const { conversationId, otherName } = useLocalSearchParams<{
-    conversationId: string;
-    otherName: string;
-  }>();
+  const { conversationId, otherName, otherStudentId, otherProfileImageUrl } =
+    useLocalSearchParams<{
+      conversationId: string;
+      otherName: string;
+      otherStudentId?: string;
+      otherProfileImageUrl?: string;
+    }>();
+  const insets = useSafeAreaInsets();
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
@@ -201,13 +207,39 @@ export default function ConversationScreen() {
       keyboardVerticalOffset={0}
     >
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color={colours.textPrimary} />
+          <Ionicons name="chevron-back" size={26} color={colours.textPrimary} />
         </Pressable>
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          {otherName}
-        </Text>
+
+        <Pressable
+          style={styles.headerCenter}
+          onPress={() =>
+            otherStudentId &&
+            router.push({
+              pathname: "/Students/profileStudent",
+              params: { userId: otherStudentId },
+            } as any)
+          }
+        >
+          <View style={styles.headerAvatar}>
+            {otherProfileImageUrl ? (
+              <Image
+                source={{ uri: otherProfileImageUrl }}
+                style={styles.headerAvatarImg}
+              />
+            ) : (
+              <Text style={styles.headerAvatarFallback}>
+                {(otherName || "?").charAt(0).toUpperCase()}
+              </Text>
+            )}
+          </View>
+          <Text style={styles.headerName} numberOfLines={1}>
+            {otherName}
+          </Text>
+        </Pressable>
+
+        <View style={styles.headerSpacer} />
       </View>
 
       {/* Message list — oldest at top, newest at bottom */}
@@ -343,21 +375,47 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingTop: 56,
-    paddingBottom: 12,
+    paddingBottom: 14,
     paddingHorizontal: 8,
     borderBottomWidth: 1,
     borderBottomColor: colours.border,
     backgroundColor: colours.surface,
   },
-  backBtn: { padding: 8 },
-  headerTitle: {
+  backBtn: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerCenter: {
     flex: 1,
-    fontSize: 17,
+    alignItems: "center",
+    gap: 5,
+  },
+  headerAvatar: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: colours.glass,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: colours.border,
+  },
+  headerAvatarImg: { width: 46, height: 46 },
+  headerAvatarFallback: {
+    fontSize: 19,
+    fontWeight: "700",
+    color: colours.primary,
+  },
+  headerName: {
+    fontSize: 16,
     fontWeight: "700",
     color: colours.textPrimary,
-    marginLeft: 4,
+    textAlign: "center",
   },
+  headerSpacer: { width: 40 },
   listContent: { padding: 12, paddingBottom: 8 },
   bubbleWrapper: { marginBottom: 12 },
   bubbleLeft: { alignItems: "flex-start" },

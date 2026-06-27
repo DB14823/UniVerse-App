@@ -3,7 +3,7 @@ import { AppState, View, StyleSheet } from "react-native";
 import { Tabs, usePathname, useRouter } from "expo-router";
 import { registerForPushNotifications } from "../../lib/notifications";
 import { fetchConversations } from "../../lib/messagesApi";
-import { useSocket } from "../hooks/useSocket";
+import { useSocket, getSocket } from "../hooks/useSocket";
 import LiquidGlassTabBar from "../components/LiquidGlassTabBar";
 
 export default function StudentsLayout() {
@@ -36,6 +36,20 @@ export default function StudentsLayout() {
     });
     return () => sub.remove();
   }, [refreshUnread]);
+
+  // Refresh badge count in real-time when a message arrives and we're not
+  // already in that conversation (where it would be marked read immediately).
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+    const handler = () => {
+      if (!pathname.includes("conversation")) refreshUnread();
+    };
+    socket.on("new_message", handler);
+    return () => {
+      socket.off("new_message", handler);
+    };
+  }, [pathname, refreshUnread]);
 
   const activeTab = useMemo(() => {
     if (pathname.includes("EventFeed")) return "events";
