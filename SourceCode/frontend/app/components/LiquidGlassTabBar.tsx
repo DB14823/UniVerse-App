@@ -10,7 +10,7 @@ const STUDENT_TABS: TabConfig[] = [
     key: "events",
     label: "Events",
     sfSymbol: "calendar",
-    sfSymbolActive: "calendar.fill",
+    sfSymbolActive: "calendar.circle.fill",
   },
   {
     key: "tickets",
@@ -22,7 +22,7 @@ const STUDENT_TABS: TabConfig[] = [
     key: "social",
     label: "Social",
     sfSymbol: "person.3",
-    sfSymbolActive: "person.3.fill",
+    sfSymbolActive: "person.3.sequence.fill",
   },
   {
     key: "messages",
@@ -37,7 +37,7 @@ const ORG_TABS: TabConfig[] = [
     key: "myEvents",
     label: "My Events",
     sfSymbol: "calendar",
-    sfSymbolActive: "calendar.fill",
+    sfSymbolActive: "calendar.circle.fill",
   },
   {
     key: "createEvent",
@@ -49,7 +49,7 @@ const ORG_TABS: TabConfig[] = [
     key: "social",
     label: "Social",
     sfSymbol: "person.3",
-    sfSymbolActive: "person.3.fill",
+    sfSymbolActive: "person.3.sequence.fill",
   },
 ];
 
@@ -74,7 +74,7 @@ type Props = StudentProps | OrgProps;
 export default function LiquidGlassTabBar(props: Props) {
   const { bottom } = useSafeAreaInsets();
   // Container height = pill (64) + safe area bottom + 12pt above home indicator
-  const containerHeight = 64 + bottom + 12;
+  const containerHeight = 64 + bottom + 6;
 
   const tabs = props.role === "student" ? STUDENT_TABS : ORG_TABS;
   const accentColor = props.role === "student" ? STUDENT_ACCENT : ORG_ACCENT;

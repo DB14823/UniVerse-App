@@ -1,4 +1,5 @@
 import React, { useMemo, useEffect } from "react";
+import { View, StyleSheet } from "react-native";
 import { Tabs, usePathname, useRouter } from "expo-router";
 import { registerForPushNotifications } from "../../lib/notifications";
 import LiquidGlassTabBar from "../components/LiquidGlassTabBar";
@@ -28,11 +29,22 @@ export default function OrganisationsLayout() {
   };
 
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-      }}
-      tabBar={() => (
+    <View style={styles.root}>
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarStyle: { display: "none" },
+        }}
+      >
+        <Tabs.Screen name="eventsOrg" options={{ href: null }} />
+        <Tabs.Screen name="createEvent" options={{ href: null }} />
+        <Tabs.Screen name="scanTickets" options={{ href: null }} />
+        <Tabs.Screen name="socialOrg" options={{ href: null }} />
+        <Tabs.Screen name="createPost" options={{ href: null }} />
+        <Tabs.Screen name="profileOrg" options={{ href: null }} />
+        <Tabs.Screen name="profileStudent" options={{ href: null }} />
+      </Tabs>
+      <View style={styles.tabBarOverlay} pointerEvents="box-none">
         <LiquidGlassTabBar
           role="org"
           activeTab={activeTab}
@@ -44,15 +56,17 @@ export default function OrganisationsLayout() {
             router.replace(routeForTab(tab) as any);
           }}
         />
-      )}
-    >
-      <Tabs.Screen name="eventsOrg" options={{ href: null }} />
-      <Tabs.Screen name="createEvent" options={{ href: null }} />
-      <Tabs.Screen name="scanTickets" options={{ href: null }} />
-      <Tabs.Screen name="socialOrg" options={{ href: null }} />
-      <Tabs.Screen name="createPost" options={{ href: null }} />
-      <Tabs.Screen name="profileOrg" options={{ href: null }} />
-      <Tabs.Screen name="profileStudent" options={{ href: null }} />
-    </Tabs>
+      </View>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+  tabBarOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+});

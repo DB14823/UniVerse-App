@@ -97,7 +97,15 @@ Run `npm run env:init` from root to bootstrap `.env` files from `.env.example`.
 - **Socket singleton**: `app/hooks/useSocket.ts` — `useSocket()` mounts the connection (call in `_layout.tsx`); `getSocket()` lets screens emit events without re-subscribing. Module-level singleton pattern with `active = false` cleanup for React Strict Mode safety.
 - **Chat pagination**: `conversation.tsx` uses `onScroll` with `contentOffset.y < 80` + `scrollEventThrottle={200}` to detect scroll-to-top and load older messages. Do NOT use `onEndReached` — it fires at the bottom (newest messages) of a non-inverted list, which is the wrong end for loading history.
 - **Push token registration**: `registerForPushNotifications()` in `lib/notifications.ts` always calls the backend on every app launch — there is no local cache guard. Do NOT re-add the `if (cached !== token)` check. The backend handles duplicate registrations efficiently, and the cache previously caused silent failures when the Railway DB lost push token records.
-- **Native modules**: A local Expo native module lives (or will live) in `SourceCode/frontend/modules/`. Each module has a `.podspec` and is linked via a `file:` entry in `package.json`. Swift source changes require an EAS rebuild — they cannot OTA. For iteration before EAS, open `ios/UniVerse.xcworkspace` in Xcode and build locally. **In progress:** `modules/liquid-glass-tab-bar/` — iOS 26 `UIGlassEffect` floating pill tab bar. Plan: `docs/superpowers/plans/2026-06-25-liquid-glass-tab-bar.md`.
+- **Native modules**: A local Expo native module lives in `SourceCode/frontend/modules/`. Each module has a `.podspec` and is linked via a `file:` entry in `package.json`. Swift source changes require an EAS rebuild — they cannot OTA. For iteration before EAS, open `ios/UniVerse.xcworkspace` in Xcode and build locally.
+  - `modules/liquid-glass-tab-bar/` — iOS 26 liquid glass floating pill tab bar. **Shipped.** Rendered as absolute-position overlay in layout (not via `tabBar` prop) to avoid React Navigation background injection.
+  - **Native module gotchas (burns hours if wrong):**
+    - `expo-module.config.json` must declare `"platforms": ["apple"]` not `"ios"` — autolinking uses `--platform apple` and silently skips anything else.
+    - The `.podspec` **must live inside the `ios/` subdirectory** — `use_expo_modules!` only scans one level into subdirectories, never the package root.
+    - After adding a new module, run `pod install` then verify with `grep "YourModule" "ios/Pods/Target Support Files/Pods-UniVerse/ExpoModulesProvider.swift"` before rebuilding.
+    - `UIBlurEffect` / `UIGlassEffect` views sample whatever UIView is behind them. React Navigation inserts opaque white ancestor views — override `didMoveToSuperview()` in your `ExpoView` and walk up clearing `backgroundColor = .clear`.
+  - **Floating tab bar pattern**: use `tabBarStyle: { display: "none" }` and render the component as a `position: absolute, bottom: 0` overlay in a wrapping `View`. This prevents React Navigation from reserving space or injecting backgrounds.
+  - **SF Symbol fill variants**: `calendar.fill` and `person.3.fill` do not exist — use `calendar.circle.fill` and `person.3.sequence.fill`.
 
 ## Known Issues
 

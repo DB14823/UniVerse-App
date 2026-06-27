@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useState, useCallback } from "react";
-import { AppState } from "react-native";
+import { AppState, View, StyleSheet } from "react-native";
 import { Tabs, usePathname, useRouter } from "expo-router";
 import { registerForPushNotifications } from "../../lib/notifications";
 import { fetchConversations } from "../../lib/messagesApi";
@@ -55,9 +55,22 @@ export default function StudentsLayout() {
   };
 
   return (
-    <Tabs
-      screenOptions={{ headerShown: false }}
-      tabBar={() => (
+    <View style={styles.root}>
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarStyle: { display: "none" },
+        }}
+      >
+        <Tabs.Screen name="EventFeed" options={{ href: null }} />
+        <Tabs.Screen name="myTickets" options={{ href: null }} />
+        <Tabs.Screen name="socialStudent" options={{ href: null }} />
+        <Tabs.Screen name="profileStudent" options={{ href: null }} />
+        <Tabs.Screen name="profileOrg" options={{ href: null }} />
+        <Tabs.Screen name="messages" options={{ href: null }} />
+        <Tabs.Screen name="conversation" options={{ href: null }} />
+      </Tabs>
+      <View style={styles.tabBarOverlay} pointerEvents="box-none">
         <LiquidGlassTabBar
           role="student"
           activeTab={activeTab}
@@ -70,15 +83,17 @@ export default function StudentsLayout() {
             router.replace(routeForTab(tab) as any);
           }}
         />
-      )}
-    >
-      <Tabs.Screen name="EventFeed" options={{ href: null }} />
-      <Tabs.Screen name="myTickets" options={{ href: null }} />
-      <Tabs.Screen name="socialStudent" options={{ href: null }} />
-      <Tabs.Screen name="profileStudent" options={{ href: null }} />
-      <Tabs.Screen name="profileOrg" options={{ href: null }} />
-      <Tabs.Screen name="messages" options={{ href: null }} />
-      <Tabs.Screen name="conversation" options={{ href: null }} />
-    </Tabs>
+      </View>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+  tabBarOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+});

@@ -52,8 +52,21 @@ class LiquidGlassTabBarView: ExpoView {
         setupActiveHighlight()
     }
 
+    // MARK: Lifecycle
+    override func didMoveToSuperview() {
+        super.didMoveToSuperview()
+        // Clear all ancestor backgrounds so the blur/glass samples real app content,
+        // not the opaque white UIViews React Navigation inserts between our view and the screen.
+        var ancestor: UIView? = superview
+        while let v = ancestor {
+            v.backgroundColor = .clear
+            ancestor = v.superview
+        }
+    }
+
     // MARK: Pill setup
     private func setupPill() {
+        pillContainer.backgroundColor = .clear
         if #available(iOS 26.0, *) {
             let glassEffect = UIGlassEffect()
             let effectView = UIVisualEffectView(effect: glassEffect)
@@ -75,9 +88,18 @@ class LiquidGlassTabBarView: ExpoView {
     }
 
     private func setupActiveHighlight() {
-        activeHighlight.backgroundColor = UIColor.white.withAlphaComponent(0.18)
-        activeHighlight.layer.cornerRadius = 24
+        activeHighlight.backgroundColor = .clear
+
+        let blur = UIBlurEffect(style: .systemUltraThinMaterialLight)
+        let effectView = UIVisualEffectView(effect: blur)
+        effectView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        activeHighlight.addSubview(effectView)
+
+        activeHighlight.layer.cornerRadius = 28
         activeHighlight.layer.cornerCurve = .continuous
+        activeHighlight.clipsToBounds = true
+        activeHighlight.layer.borderWidth = 0.5
+        activeHighlight.layer.borderColor = UIColor.white.withAlphaComponent(0.5).cgColor
         activeHighlight.isUserInteractionEnabled = false
         activeHighlight.isHidden = true
         pillContainer.addSubview(activeHighlight)
@@ -156,6 +178,7 @@ class LiquidGlassTabBarView: ExpoView {
 
             guard var cfg = button.configuration else { continue }
             cfg.image = UIImage(systemName: symbolName, withConfiguration: symbolCfg)
+                ?? UIImage(systemName: tab.sfSymbol, withConfiguration: symbolCfg)
             cfg.baseForegroundColor = isActive
                 ? accentColor
                 : UIColor.white.withAlphaComponent(0.55)
@@ -171,15 +194,15 @@ class LiquidGlassTabBarView: ExpoView {
             return
         }
         activeHighlight.isHidden = false
-        let targetFrame = tabButtons[idx].frame.insetBy(dx: 4, dy: 6)
+        let targetFrame = tabButtons[idx].frame.insetBy(dx: 4, dy: 4)
 
         if animated {
             UIView.animate(
-                withDuration: 0.3,
+                withDuration: 0.42,
                 delay: 0,
-                usingSpringWithDamping: 0.75,
-                initialSpringVelocity: 0.3,
-                options: .curveEaseOut
+                usingSpringWithDamping: 0.68,
+                initialSpringVelocity: 0.6,
+                options: [.curveEaseOut, .allowUserInteraction]
             ) {
                 self.activeHighlight.frame = targetFrame
             }
@@ -206,7 +229,7 @@ class LiquidGlassTabBarView: ExpoView {
         let pillWidth = bounds.width - (margin * 2)
         pillContainer.frame = CGRect(
             x: margin,
-            y: bounds.height - pillHeight,
+            y: 0,
             width: pillWidth,
             height: pillHeight
         )
