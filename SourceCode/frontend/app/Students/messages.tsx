@@ -97,6 +97,7 @@ export default function MessagesScreen() {
                     otherName: otherStudent.name || otherStudent.username,
                     otherStudentId: otherStudent.id,
                     otherProfileImageUrl: otherStudent.profileImageUrl ?? "",
+                    backPath: "messages",
                   },
                 } as any)
               }

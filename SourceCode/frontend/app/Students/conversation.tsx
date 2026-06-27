@@ -39,13 +39,19 @@ function groupReactions(
 
 export default function ConversationScreen() {
   const router = useRouter();
-  const { conversationId, otherName, otherStudentId, otherProfileImageUrl } =
-    useLocalSearchParams<{
-      conversationId: string;
-      otherName: string;
-      otherStudentId?: string;
-      otherProfileImageUrl?: string;
-    }>();
+  const {
+    conversationId,
+    otherName,
+    otherStudentId,
+    otherProfileImageUrl,
+    backPath,
+  } = useLocalSearchParams<{
+    conversationId: string;
+    otherName: string;
+    otherStudentId?: string;
+    otherProfileImageUrl?: string;
+    backPath?: string;
+  }>();
   const insets = useSafeAreaInsets();
 
   const [messages, setMessages] = useState<Message[]>([]);
@@ -208,7 +214,16 @@ export default function ConversationScreen() {
     >
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+        <Pressable
+          onPress={() => {
+            if (backPath === "messages") {
+              router.replace("/Students/messages" as any);
+            } else {
+              router.back();
+            }
+          }}
+          style={styles.backBtn}
+        >
           <Ionicons name="chevron-back" size={26} color={colours.textPrimary} />
         </Pressable>
 
@@ -340,7 +355,7 @@ export default function ConversationScreen() {
       </Modal>
 
       {/* Input bar */}
-      <View style={styles.inputBar}>
+      <View style={[styles.inputBar, { paddingBottom: insets.bottom + 8 }]}>
         <TextInput
           style={styles.input}
           value={text}

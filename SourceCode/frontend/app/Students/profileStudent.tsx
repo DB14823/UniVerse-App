@@ -71,6 +71,8 @@ export default function ProfileStudent() {
   const handleBackPress = useCallback(() => {
     if (routeViewerRole === "ORGANISATION") {
       router.replace("/Organisations/socialOrg");
+    } else if (router.canGoBack()) {
+      router.back();
     } else {
       router.replace("/Students/socialStudent");
     }
@@ -193,6 +195,7 @@ export default function ProfileStudent() {
           otherName: username,
           otherStudentId: userId,
           otherProfileImageUrl: profileImageUri ?? "",
+          backPath: "profile",
         },
       } as any);
     } catch (error) {

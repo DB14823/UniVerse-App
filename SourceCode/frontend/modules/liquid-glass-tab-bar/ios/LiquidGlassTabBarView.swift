@@ -43,6 +43,7 @@ class LiquidGlassTabBarView: ExpoView {
     private let activeHighlight = UIView()
     private var tabButtons: [UIButton] = []
     private var badgeViews: [String: UILabel] = [:]
+    private var highlightAnimating = false
 
     // MARK: Init
     required init(appContext: AppContext? = nil) {
@@ -197,6 +198,7 @@ class LiquidGlassTabBarView: ExpoView {
         let targetFrame = tabButtons[idx].frame.insetBy(dx: 4, dy: 4)
 
         if animated {
+            highlightAnimating = true
             UIView.animate(
                 withDuration: 0.42,
                 delay: 0,
@@ -205,6 +207,8 @@ class LiquidGlassTabBarView: ExpoView {
                 options: [.curveEaseOut, .allowUserInteraction]
             ) {
                 self.activeHighlight.frame = targetFrame
+            } completion: { _ in
+                self.highlightAnimating = false
             }
         } else {
             activeHighlight.frame = targetFrame
@@ -255,6 +259,8 @@ class LiquidGlassTabBarView: ExpoView {
             }
         }
 
-        positionActiveHighlight(animated: false)
+        if !highlightAnimating {
+            positionActiveHighlight(animated: false)
+        }
     }
 }
