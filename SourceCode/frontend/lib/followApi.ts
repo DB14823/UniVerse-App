@@ -69,9 +69,11 @@ export async function unfollowUser(targetId: string): Promise<void> {
 }
 
 /**
- * Check if current user is following a target
+ * Check if current user is following a target, and if target follows back
  */
-export async function checkFollowing(targetId: string): Promise<boolean> {
+export async function checkFollowing(
+  targetId: string,
+): Promise<{ isFollowing: boolean; isFollowedBack: boolean }> {
   const token = await getAuthToken();
   if (!token) {
     throw new Error("Not authenticated");
@@ -84,7 +86,7 @@ export async function checkFollowing(targetId: string): Promise<boolean> {
     },
   });
 
-  return data.isFollowing;
+  return { isFollowing: data.isFollowing, isFollowedBack: data.isFollowedBack };
 }
 
 /**

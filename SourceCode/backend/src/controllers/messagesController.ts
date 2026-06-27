@@ -19,7 +19,10 @@ export const getConversations = async (req: Request, res: Response) => {
     if (!studentId) return res.status(401).json({ message: "Unauthorized" });
 
     const conversations = await prisma.conversation.findMany({
-      where: { OR: [{ student1Id: studentId }, { student2Id: studentId }] },
+      where: {
+        OR: [{ student1Id: studentId }, { student2Id: studentId }],
+        messages: { some: {} },
+      },
       include: {
         student1: { select: STUDENT_SELECT },
         student2: { select: STUDENT_SELECT },

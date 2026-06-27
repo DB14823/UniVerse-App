@@ -29,6 +29,7 @@ import {
   checkFollowing,
   getFollowCounts,
 } from "../../lib/followApi";
+import { getOrCreateConversation } from "../../lib/messagesApi";
 import { colours } from "../../lib/theme/colours";
 
 export default function ProfileStudent() {
@@ -47,7 +48,9 @@ export default function ProfileStudent() {
   const [loading, setLoading] = useState(true);
   const [profileImageUri, setProfileImageUri] = useState<string | null>(null);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [isFollowedBack, setIsFollowedBack] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [messageLoading, setMessageLoading] = useState(false);
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
 
@@ -124,13 +127,16 @@ export default function ProfileStudent() {
 
         // Load follow data
         try {
-          const [counts, followingStatus] = await Promise.all([
+          const [counts, followStatus] = await Promise.all([
             getFollowCounts(finalUserId),
-            viewingOther ? checkFollowing(finalUserId) : Promise.resolve(false),
+            viewingOther
+              ? checkFollowing(finalUserId)
+              : Promise.resolve({ isFollowing: false, isFollowedBack: false }),
           ]);
           setFollowersCount(counts.followersCount);
           setFollowingCount(counts.followingCount);
-          setIsFollowing(followingStatus);
+          setIsFollowing(followStatus.isFollowing);
+          setIsFollowedBack(followStatus.isFollowedBack);
         } catch (err) {
           console.error("Error loading follow data:", err);
         }
@@ -174,6 +180,26 @@ export default function ProfileStudent() {
       setFollowLoading(false);
     }
   }, [userId, isFollowing, followLoading]);
+
+  const handleMessagePress = useCallback(async () => {
+    if (!userId || messageLoading) return;
+    try {
+      setMessageLoading(true);
+      const { conversation } = await getOrCreateConversation(userId);
+      router.push({
+        pathname: "/Students/conversation",
+        params: {
+          conversationId: conversation.id,
+          otherName: username,
+          otherStudentId: userId,
+        },
+      } as any);
+    } catch (error) {
+      console.error("Error opening conversation:", error);
+    } finally {
+      setMessageLoading(false);
+    }
+  }, [userId, messageLoading, username, router]);
 
   const bottomPad = 110 + Math.max(insets.bottom, 0);
 
@@ -243,35 +269,68 @@ export default function ProfileStudent() {
         </View>
 
         {viewingOther && userId && (
-          <TouchableOpacity
-            style={[styles.followBtn, isFollowing ? styles.followingBtn : null]}
-            onPress={handleFollowPress}
-            disabled={followLoading}
-            activeOpacity={0.85}
-          >
-            {followLoading ? (
-              <ActivityIndicator size="small" color={colours.textPrimary} />
-            ) : (
-              <>
-                <Ionicons
-                  name={isFollowing ? "checkmark" : "add"}
-                  size={18}
-                  color={
-                    isFollowing ? colours.textSecondary : colours.textPrimary
-                  }
-                  style={{ marginRight: 6 }}
-                />
-                <Text
-                  style={[
-                    styles.followBtnText,
-                    isFollowing ? styles.followingBtnText : null,
-                  ]}
+          <View style={styles.actionRow}>
+            <TouchableOpacity
+              style={[
+                styles.followBtn,
+                isFollowing ? styles.followingBtn : null,
+              ]}
+              onPress={handleFollowPress}
+              disabled={followLoading}
+              activeOpacity={0.85}
+            >
+              {followLoading ? (
+                <ActivityIndicator size="small" color={colours.textPrimary} />
+              ) : (
+                <>
+                  <Ionicons
+                    name={isFollowing ? "checkmark" : "add"}
+                    size={18}
+                    color={
+                      isFollowing ? colours.textSecondary : colours.textPrimary
+                    }
+                    style={{ marginRight: 6 }}
+                  />
+                  <Text
+                    style={[
+                      styles.followBtnText,
+                      isFollowing ? styles.followingBtnText : null,
+                    ]}
+                  >
+                    {isFollowing ? "Following" : "Follow"}
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            {isFollowing &&
+              isFollowedBack &&
+              routeViewerRole !== "ORGANISATION" && (
+                <TouchableOpacity
+                  style={styles.messageBtn}
+                  onPress={handleMessagePress}
+                  disabled={messageLoading}
+                  activeOpacity={0.85}
                 >
-                  {isFollowing ? "Following" : "Follow"}
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
+                  {messageLoading ? (
+                    <ActivityIndicator
+                      size="small"
+                      color={colours.textPrimary}
+                    />
+                  ) : (
+                    <>
+                      <Ionicons
+                        name="chatbubble-outline"
+                        size={18}
+                        color={colours.textPrimary}
+                        style={{ marginRight: 6 }}
+                      />
+                      <Text style={styles.messageBtnText}>Message</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              )}
+          </View>
         )}
 
         {loading ? (
@@ -483,7 +542,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 
+  actionRow: {
+    flexDirection: "row",
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    gap: 10,
+  },
+
   followBtn: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -491,8 +558,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     borderRadius: 999,
     backgroundColor: colours.primary,
-    marginHorizontal: 16,
-    marginBottom: 16,
   },
 
   followingBtn: {
@@ -509,5 +574,24 @@ const styles = StyleSheet.create({
 
   followingBtnText: {
     color: colours.textSecondary,
+  },
+
+  messageBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 999,
+    backgroundColor: colours.glass,
+    borderWidth: 1,
+    borderColor: colours.border,
+  },
+
+  messageBtnText: {
+    color: colours.textPrimary,
+    fontSize: 16,
+    fontWeight: "800",
   },
 });

@@ -223,13 +223,13 @@ export default function ProfileOrg() {
         const isViewingOther = routeUserId && routeUserId !== currentUserId;
         if (isViewingOther) {
           try {
-            const [counts, followingStatus] = await Promise.all([
+            const [counts, followStatus] = await Promise.all([
               getFollowCounts(finalUserId),
               checkFollowing(finalUserId),
             ]);
             setFollowersCount(counts.followersCount);
             setFollowingCount(counts.followingCount);
-            setIsFollowing(followingStatus);
+            setIsFollowing(followStatus.isFollowing);
           } catch (err) {
             console.error("Error loading follow data:", err);
           }

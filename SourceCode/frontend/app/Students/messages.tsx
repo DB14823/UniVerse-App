@@ -80,7 +80,7 @@ export default function MessagesScreen() {
           <View style={styles.center}>
             <Text style={styles.emptyText}>No conversations yet.</Text>
             <Text style={styles.emptySubText}>
-              Mutually follow a student to start messaging.
+              Visit a student's profile to send your first message.
             </Text>
           </View>
         }

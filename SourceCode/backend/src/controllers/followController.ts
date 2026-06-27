@@ -287,16 +287,23 @@ export const checkFollowing = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Target ID is required" });
     }
 
-    const existing = await prisma.follow.findUnique({
-      where: {
-        followerId_followingId: {
-          followerId: userId,
-          followingId: targetId,
+    const [existing, followedBack] = await Promise.all([
+      prisma.follow.findUnique({
+        where: {
+          followerId_followingId: { followerId: userId, followingId: targetId },
         },
-      },
-    });
+      }),
+      prisma.follow.findUnique({
+        where: {
+          followerId_followingId: { followerId: targetId, followingId: userId },
+        },
+      }),
+    ]);
 
-    return res.json({ isFollowing: !!existing });
+    return res.json({
+      isFollowing: !!existing,
+      isFollowedBack: !!followedBack,
+    });
   } catch (error) {
     console.error("Error checking follow status:", error);
     return res.status(500).json({ message: "Server error", error });
