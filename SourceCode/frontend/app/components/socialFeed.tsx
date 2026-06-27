@@ -22,6 +22,7 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { usePosts } from "../../contexts/PostsContext";
 import { colours } from "../../lib/theme/colours";
 import * as SecureStore from "expo-secure-store";
@@ -318,11 +319,11 @@ export default function SocialFeed({
       />
 
       <TouchableOpacity
-        style={styles.floatingButton}
+        style={[styles.floatingButton, { bottom: 64 + insets.bottom + 20 }]}
         onPress={() => router.push(createPostPath as any)}
-        activeOpacity={0.85}
+        activeOpacity={0.8}
       >
-        <Text style={styles.floatingButtonIcon}>+</Text>
+        <Ionicons name="add" size={30} color="#fff" />
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -401,24 +402,19 @@ const styles = StyleSheet.create({
 
   floatingButton: {
     position: "absolute",
-    bottom: 90,
     right: 20,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: colours.success,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colours.primary,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: Platform.OS === "ios" ? 0.3 : 0.5,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  floatingButtonIcon: {
-    fontSize: 32,
-    color: colours.textPrimary,
-    fontWeight: "700",
-    lineHeight: 32,
+    shadowColor: colours.primary,
+    shadowOpacity: 0.45,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 12,
+    elevation: 10,
+    borderWidth: 1,
+    borderColor: colours.primaryLight,
   },
 });

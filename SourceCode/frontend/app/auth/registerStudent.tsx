@@ -54,7 +54,6 @@ export default function RegisterStudent() {
         email: emailValue,
         username: usernameValue,
         password: passwordValue,
-        name: "Student",
       }),
     });
 
