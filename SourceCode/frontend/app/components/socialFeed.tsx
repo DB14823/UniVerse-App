@@ -1,4 +1,10 @@
-import React, { useMemo, useState, useCallback, useEffect, useRef } from "react";
+import React, {
+  useMemo,
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+} from "react";
 import {
   View,
   Text,
@@ -11,7 +17,10 @@ import {
   Image as RNImage,
   ActivityIndicator,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { usePosts } from "../../contexts/PostsContext";
 import { colours } from "../../lib/theme/colours";
@@ -37,14 +46,14 @@ export default function SocialFeed({
   const params = useLocalSearchParams<{ q?: string }>();
 
   const [refreshing, setRefreshing] = useState(false);
-  const [searchQuery, setSearchQuery] = useState<string>(
-    () => (params.q ? String(params.q) : "")
+  const [searchQuery, setSearchQuery] = useState<string>(() =>
+    params.q ? String(params.q) : "",
   );
   const [hashtagPosts, setHashtagPosts] = useState<typeof posts>([]);
   const [isHashtagSearch, setIsHashtagSearch] = useState(false);
   const [hashtagLoading, setHashtagLoading] = useState(false);
   const [resolvedProfilePath, setResolvedProfilePath] = useState<string>(
-    profilePath || "/Students/profileStudent"
+    profilePath || "/Students/profileStudent",
   );
   const [profileImageUri, setProfileImageUri] = useState<string | null>(null);
   const [viewerRole, setViewerRole] = useState<
@@ -91,7 +100,8 @@ export default function SocialFeed({
         (await SecureStore.getItemAsync("userRole")) ||
         (await SecureStore.getItemAsync("role"));
 
-      const normalizedRole = role === "ORGANISATION" ? "ORGANISATION" : "STUDENT";
+      const normalizedRole =
+        role === "ORGANISATION" ? "ORGANISATION" : "STUDENT";
 
       const next =
         normalizedRole === "ORGANISATION"
@@ -140,25 +150,28 @@ export default function SocialFeed({
     return posts.filter(
       (p) =>
         p.username.toLowerCase().includes(q) ||
-        p.caption.toLowerCase().includes(q)
+        p.caption.toLowerCase().includes(q),
     );
   }, [posts, searchQuery, isHashtagSearch, hashtagPosts]);
 
   const bottomPad = 110 + Math.max(insets.bottom, 0);
 
-  const handleToggleLike = useCallback((postId: string) => {
-    const allPosts = isHashtagSearch ? hashtagPosts : posts;
-    const post = allPosts.find((p) => p.id === postId);
-    const wasLiked = Boolean(post?.liked);
+  const handleToggleLike = useCallback(
+    (postId: string) => {
+      const allPosts = isHashtagSearch ? hashtagPosts : posts;
+      const post = allPosts.find((p) => p.id === postId);
+      const wasLiked = Boolean(post?.liked);
 
-    setLikeCounts((prev) => {
-      const current = prev[postId] ?? 0;
-      const nextCount = Math.max(0, current + (wasLiked ? -1 : 1));
-      return { ...prev, [postId]: nextCount };
-    });
+      setLikeCounts((prev) => {
+        const current = prev[postId] ?? 0;
+        const nextCount = Math.max(0, current + (wasLiked ? -1 : 1));
+        return { ...prev, [postId]: nextCount };
+      });
 
-    toggleLike(postId);
-  }, [posts, hashtagPosts, isHashtagSearch, toggleLike]);
+      toggleLike(postId);
+    },
+    [posts, hashtagPosts, isHashtagSearch, toggleLike],
+  );
 
   const handleHashtagPress = useCallback(async (hashtag: string) => {
     setSearchQuery(hashtag);
@@ -176,7 +189,8 @@ export default function SocialFeed({
         caption: dbPost.caption,
         imageUri: dbPost.imageUrl || null,
         likeCount: typeof dbPost.likeCount === "number" ? dbPost.likeCount : 0,
-        commentCount: typeof dbPost.commentCount === "number" ? dbPost.commentCount : 0,
+        commentCount:
+          typeof dbPost.commentCount === "number" ? dbPost.commentCount : 0,
         liked: Boolean(dbPost.likedByMe),
         timestamp: new Date(dbPost.createdAt).getTime(),
       }));
@@ -197,35 +211,48 @@ export default function SocialFeed({
     }
   }, [searchQuery]);
 
-  const renderPost = useCallback(({ item: post }: { item: (typeof posts)[number] }) => (
-    <View style={styles.postCard}>
-      <PostCard
-        id={post.id}
-        userId={post.userId}
-        username={post.username}
-        userRole={post.userRole}
-        userAvatarUri={post.userAvatarUri}
-        imageUri={post.imageUri}
-        caption={post.caption}
-        liked={post.liked}
-        likeCount={likeCounts[post.id] ?? (post as any).likeCount ?? 0}
-        commentCount={post.commentCount ?? 0}
-        viewerRole={viewerRole}
-        onToggleLike={handleToggleLike}
-        onHashtagPress={handleHashtagPress}
-        onPress={() => router.push({ pathname: "/post/[postId]", params: { postId: post.id } } as any)}
-      />
-    </View>
-  ), [likeCounts, viewerRole, handleToggleLike, handleHashtagPress, router]);
+  const renderPost = useCallback(
+    ({ item: post }: { item: (typeof posts)[number] }) => (
+      <View style={styles.postCard}>
+        <PostCard
+          id={post.id}
+          userId={post.userId}
+          username={post.username}
+          userRole={post.userRole}
+          userAvatarUri={post.userAvatarUri}
+          imageUri={post.imageUri}
+          caption={post.caption}
+          liked={post.liked}
+          likeCount={likeCounts[post.id] ?? (post as any).likeCount ?? 0}
+          commentCount={post.commentCount ?? 0}
+          viewerRole={viewerRole}
+          onToggleLike={handleToggleLike}
+          onHashtagPress={handleHashtagPress}
+          onPress={() =>
+            router.push({
+              pathname: "/post/[postId]",
+              params: { postId: post.id },
+            } as any)
+          }
+        />
+      </View>
+    ),
+    [likeCounts, viewerRole, handleToggleLike, handleHashtagPress, router],
+  );
 
-  const keyExtractor = useCallback((item: (typeof posts)[number]) => item.id, []);
+  const keyExtractor = useCallback(
+    (item: (typeof posts)[number]) => item.id,
+    [],
+  );
 
   const ListEmptyComponent = useMemo(() => {
     if (hashtagLoading) {
       return (
         <View style={styles.emptyCard}>
           <ActivityIndicator color={colours.secondary} size="large" />
-          <Text style={[styles.emptyTitle, { marginTop: 12 }]}>Searching...</Text>
+          <Text style={[styles.emptyTitle, { marginTop: 12 }]}>
+            Searching...
+          </Text>
         </View>
       );
     }
@@ -325,7 +352,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colours.border,
   },
-  searchInput: { flex: 1, color: colours.textPrimary, fontSize: 15, paddingRight: 10 },
+  searchInput: {
+    flex: 1,
+    color: colours.textPrimary,
+    fontSize: 15,
+    paddingRight: 10,
+  },
   searchIcon: { color: "rgba(255,255,255,0.7)", fontSize: 18, marginLeft: 8 },
 
   profileBtn: {
@@ -359,12 +391,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colours.border,
   },
-  emptyTitle: { color: colours.textPrimary, fontWeight: "900", fontSize: 16, marginBottom: 4 },
+  emptyTitle: {
+    color: colours.textPrimary,
+    fontWeight: "900",
+    fontSize: 16,
+    marginBottom: 4,
+  },
   emptyText: { color: colours.textSecondary },
 
   floatingButton: {
     position: "absolute",
-    bottom: 10,
+    bottom: 90,
     right: 20,
     width: 60,
     height: 60,
@@ -378,5 +415,10 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-  floatingButtonIcon: { fontSize: 32, color: colours.textPrimary, fontWeight: "700", lineHeight: 32 },
+  floatingButtonIcon: {
+    fontSize: 32,
+    color: colours.textPrimary,
+    fontWeight: "700",
+    lineHeight: 32,
+  },
 });

@@ -70,7 +70,13 @@ export default function StudentsLayout() {
         <Tabs.Screen name="messages" options={{ href: null }} />
         <Tabs.Screen name="conversation" options={{ href: null }} />
       </Tabs>
-      <View style={styles.tabBarOverlay} pointerEvents="box-none">
+      <View
+        style={[
+          styles.tabBarOverlay,
+          pathname.includes("conversation") && { display: "none" },
+        ]}
+        pointerEvents="box-none"
+      >
         <LiquidGlassTabBar
           role="student"
           activeTab={activeTab}
