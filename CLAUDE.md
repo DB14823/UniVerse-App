@@ -66,6 +66,11 @@ Run `npm run env:init` from root to bootstrap `.env` files from `.env.example`.
 - **Role middleware**: The export from `SourceCode/backend/src/middleware/roleMiddleware.ts` is named `requireRole` (not `roleMiddleware`). Usage: `requireRole("STUDENT")`.
 - **Socket.io**: Integrated into Express via `http.createServer(app)` in `server.ts`. Real-time DMs use private rooms per student (`room:<studentId>`). Socket server at `SourceCode/backend/src/socket/index.ts` — exports `initSocket(httpServer)` and singleton `io`. JWT auth on handshake via `socket.handshake.auth.token`.
 - **Direct Messages**: Students-only, mutual follow required to initiate. Conversation uniqueness enforced via canonical UUID pair ordering (`a < b ? [a, b] : [b, a]`). REST routes at `/messages/*` (requires auth + `requireRole("STUDENT")`). Client emits: `send_message`, `typing`, `react_message`. Server emits: `new_message`, `typing`, `message_reaction`. Push notification fallback when recipient socket room is empty.
+  - **Entry point**: Message button appears on student profiles only when the viewer mutually follows the subject (`isFollowing && isFollowedBack`). Not shown to org viewers. Calls `POST /messages/conversations` (getOrCreateConversation) then navigates to conversation screen.
+  - **Conversation list**: `GET /messages/conversations` filters to conversations with `messages: { some: {} }` — empty conversations (created on button tap before any message is sent) are never shown in the list.
+  - **`checkFollowing` return shape**: `GET /follow/check/:targetId` now returns `{ isFollowing: boolean, isFollowedBack: boolean }`. The frontend `checkFollowing()` in `lib/followApi.ts` returns this object — do NOT treat it as a plain boolean. Both `profileStudent.tsx` and `profileOrg.tsx` destructure `.isFollowing`.
+  - **Conversation navigation**: the screen accepts a `backPath` param. `"messages"` → `router.replace("/Students/messages")`; `"profile"` or absent → `router.back()`. Always pass `backPath` when navigating to conversation.
+  - **Real-time badge**: `Students/_layout.tsx` subscribes to socket `new_message` events and calls `refreshUnread()` unless `pathname.includes("conversation")`. Tab bar hides via `display: "none"` on the overlay when on the conversation screen.
 
 ## Git Conventions
 
@@ -106,11 +111,13 @@ Run `npm run env:init` from root to bootstrap `.env` files from `.env.example`.
     - `UIBlurEffect` / `UIGlassEffect` views sample whatever UIView is behind them. React Navigation inserts opaque white ancestor views — override `didMoveToSuperview()` in your `ExpoView` and walk up clearing `backgroundColor = .clear`.
   - **Floating tab bar pattern**: use `tabBarStyle: { display: "none" }` and render the component as a `position: absolute, bottom: 0` overlay in a wrapping `View`. This prevents React Navigation from reserving space or injecting backgrounds.
   - **SF Symbol fill variants**: `calendar.fill` and `person.3.fill` do not exist — use `calendar.circle.fill` and `person.3.sequence.fill`.
+  - **Tab bar animation**: the active highlight uses a `highlightAnimating: Bool` flag in Swift. `layoutSubviews` skips `positionActiveHighlight` while this flag is set, preventing it from cancelling the spring animation mid-flight. Do not remove this guard.
 
 ## Known Issues
 
 - Push notifications are fully functional end-to-end (APNs key configured, cron reminders, follow/like/comment/booking triggers). Requires EAS preview build — local Xcode builds lack the `aps-environment` entitlement.
 - Organisation verification badge shows for all orgs regardless of verified status — `Organisation` model has no `verified` boolean; needs a migration and real badge logic.
+- **Existing student accounts have `name: "Student"`** in the DB — a leftover dev placeholder that was hardcoded in the registration form. The code is fixed, but existing rows need a one-off SQL fix on Railway: `UPDATE "Student" SET name = NULL WHERE name = 'Student';`
 
 ## Production Readiness — Outstanding Issues
 
