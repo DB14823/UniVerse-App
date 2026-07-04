@@ -104,6 +104,10 @@ Run `npm run env:init` from root to bootstrap `.env` files from `.env.example`.
 - **Push token registration**: `registerForPushNotifications()` in `lib/notifications.ts` always calls the backend on every app launch — there is no local cache guard. Do NOT re-add the `if (cached !== token)` check. The backend handles duplicate registrations efficiently, and the cache previously caused silent failures when the Railway DB lost push token records.
 - **Native modules**: A local Expo native module lives in `SourceCode/frontend/modules/`. Each module has a `.podspec` and is linked via a `file:` entry in `package.json`. Swift source changes require an EAS rebuild — they cannot OTA. For iteration before EAS, open `ios/UniVerse.xcworkspace` in Xcode and build locally.
   - `modules/liquid-glass-tab-bar/` — iOS 26 liquid glass floating pill tab bar. **Shipped.** Rendered as absolute-position overlay in layout (not via `tabBar` prop) to avoid React Navigation background injection.
+  - `modules/haptic-feedback/` — **Shipped.** Function module. `impactAsync(style)` + `notificationAsync(type)` wrapping `UIImpactFeedbackGenerator` / `UINotificationFeedbackGenerator`. Fired on: like toggle (medium), send message (light), feed pull-to-refresh (success), ticket purchase (success).
+  - `modules/share-sheet/` — **Shipped.** Function module. `shareAsync({ message?, url? })` via `UIActivityViewController`. Triggered from PostCard "···" options button.
+  - `modules/native-image-picker/` — **Shipped.** Function module. `pickImageAsync()` via `PHPickerViewController`. Returns `{ canceled, uri }` where `uri` is a `file://` path. Replaces `expo-image-picker` (gallery) and `react-native-image-crop-picker` across all create/settings screens. **Note:** `PHPickerViewController` does not require a permission request — it handles access internally. Camera (`takePhoto`) still uses `expo-image-picker`.
+  - `modules/native-action-sheet/` — **Shipped.** Function module. `showActionSheetAsync({ title?, message?, options, cancelButtonIndex, destructiveButtonIndex? })` via `UIAlertController` action sheet. Returns `{ buttonIndex }`. Used in PostCard "···" menu (share post / cancel).
   - **Native module gotchas (burns hours if wrong):**
     - `expo-module.config.json` must declare `"platforms": ["apple"]` not `"ios"` — autolinking uses `--platform apple` and silently skips anything else.
     - The `.podspec` **must live inside the `ios/` subdirectory** — `use_expo_modules!` only scans one level into subdirectories, never the package root.
@@ -135,7 +139,7 @@ Issues identified 2026-05-09. Fix before onboarding real users.
 
 - **No password strength enforcement** — any string is accepted. Add minimum length (8+ chars) before `bcrypt.hash`.
 - **No token revocation** — stolen JWTs are valid for 7 days with no way to invalidate. Add a refresh token flow or Redis-backed blocklist.
-- **Base64 image uploads won't scale** — 10MB JSON body limit works but is inefficient (base64 adds ~33% overhead). Move to signed Cloudinary direct uploads from the client.
+- **Base64 image uploads won't scale** — 10MB JSON body limit works but is inefficient (base64 adds ~33% overhead). Cloudinary is in use for image storage but the frontend still sends base64 to the backend which then uploads to Cloudinary. Move to signed Cloudinary direct uploads from the client to remove the base64 overhead.
 - **No `helmet` middleware** — add `helmet()` to `server.ts` for standard security headers (`X-Frame-Options`, CSP, etc.). One-liner.
 - **Stripe still in test mode** — swap to live Stripe keys before taking real payments; test full payment flow end-to-end with a real card first.
 
