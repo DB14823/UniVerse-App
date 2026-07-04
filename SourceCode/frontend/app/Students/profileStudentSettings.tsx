@@ -17,7 +17,7 @@ import {
 } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import ImageCropPicker from "react-native-image-crop-picker";
+import { pickImageAsync } from "../../modules/native-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { clearSession } from "../../lib/auth";
 import {
@@ -108,20 +108,10 @@ export default function ProfileSettings() {
   };
 
   const handlePickProfileImage = async () => {
-    let image;
-    try {
-      image = await ImageCropPicker.openPicker({
-        width: 400,
-        height: 400,
-        cropping: true,
-        cropperCircleOverlay: true,
-        compressImageQuality: 0.8,
-      });
-    } catch {
-      return;
-    }
+    const picked = await pickImageAsync();
+    if (picked.canceled || !picked.uri) return;
 
-    const nextUri = image.path;
+    const nextUri = picked.uri;
     const previousUri = profileImageUri;
 
     try {

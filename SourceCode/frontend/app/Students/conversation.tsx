@@ -24,6 +24,7 @@ import {
   MessageReaction,
 } from "../../lib/messagesApi";
 import { getSocket } from "../hooks/useSocket";
+import { impactAsync } from "../../modules/haptic-feedback";
 
 const EMOJI_OPTIONS = ["❤️", "😂", "👍", "😮", "😢", "🔥", "👏"];
 
@@ -159,6 +160,7 @@ export default function ConversationScreen() {
     if (!socket) return;
     socket.emit("send_message", { conversationId, content: trimmed });
     setText("");
+    impactAsync("light");
   };
 
   const onChangeText = (val: string) => {

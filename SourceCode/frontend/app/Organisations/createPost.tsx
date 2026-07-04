@@ -15,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
+import { pickImageAsync } from "../../modules/native-image-picker";
 import { usePosts } from "../../contexts/PostsContext";
 import { colours } from "../../lib/theme/colours";
 
@@ -25,26 +26,9 @@ export default function CreatePost() {
   const [imageUri, setImageUri] = useState<string | null>(null);
 
   const pickImage = async () => {
-    const permissionResult =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (permissionResult.granted === false) {
-      Alert.alert(
-        "Permission Required",
-        "Please allow access to your photo library.",
-      );
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      setImageUri(result.assets[0].uri);
+    const result = await pickImageAsync();
+    if (!result.canceled && result.uri) {
+      setImageUri(result.uri);
     }
   };
 

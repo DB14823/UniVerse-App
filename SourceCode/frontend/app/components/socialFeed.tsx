@@ -28,6 +28,7 @@ import { colours } from "../../lib/theme/colours";
 import * as SecureStore from "expo-secure-store";
 import { getCurrentUser, getPostsByHashtag } from "../../lib/postsApi";
 import PostCard from "./PostCard";
+import { notificationAsync } from "../../modules/haptic-feedback";
 
 interface Props {
   refreshTrigger?: string;
@@ -83,6 +84,7 @@ export default function SocialFeed({
     try {
       await refreshPosts();
       await loadProfileAvatar();
+      notificationAsync("success");
     } finally {
       setRefreshing(false);
     }

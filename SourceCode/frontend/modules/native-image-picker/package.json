@@ -1,0 +1,7 @@
+{
+  "name": "native-image-picker",
+  "version": "1.0.0",
+  "description": "Native PHPickerViewController image picker for UniVerse",
+  "main": "index.ts",
+  "license": "MIT"
+}

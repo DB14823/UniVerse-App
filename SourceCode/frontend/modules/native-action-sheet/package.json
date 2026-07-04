@@ -1,0 +1,7 @@
+{
+  "name": "native-action-sheet",
+  "version": "1.0.0",
+  "description": "Native UIAlertController action sheet for UniVerse",
+  "main": "index.ts",
+  "license": "MIT"
+}

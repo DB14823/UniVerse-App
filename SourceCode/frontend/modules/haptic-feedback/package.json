@@ -1,0 +1,7 @@
+{
+  "name": "haptic-feedback",
+  "version": "1.0.0",
+  "description": "Native haptic feedback for UniVerse",
+  "main": "index.ts",
+  "license": "MIT"
+}

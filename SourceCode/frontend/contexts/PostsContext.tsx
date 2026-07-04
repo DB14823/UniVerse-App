@@ -9,6 +9,7 @@ import * as SecureStore from "expo-secure-store";
 import * as postsApi from "../lib/postsApi";
 import { useRouter } from "expo-router";
 import { AuthError } from "../lib/auth";
+import { impactAsync } from "../modules/haptic-feedback";
 
 export type Post = {
   id: string;
@@ -130,6 +131,7 @@ export function PostsProvider({ children }: { children: ReactNode }) {
         return { ...p, liked: nextLiked, likeCount: nextCount };
       }),
     );
+    impactAsync("medium");
 
     try {
       const result: any = await postsApi.togglePostLike(id);

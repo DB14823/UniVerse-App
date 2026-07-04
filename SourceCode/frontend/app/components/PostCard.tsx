@@ -9,6 +9,8 @@ import {
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { colours } from "../../lib/theme/colours";
+import { showActionSheetAsync } from "../../modules/native-action-sheet";
+import { shareAsync } from "../../modules/share-sheet";
 
 interface PostCardProps {
   id: string;
@@ -76,6 +78,16 @@ export default function PostCard({
     onToggleLike(id);
   }, [id, onToggleLike]);
 
+  const handleOptions = useCallback(async () => {
+    const { buttonIndex } = await showActionSheetAsync({
+      options: ["Share Post", "Cancel"],
+      cancelButtonIndex: 1,
+    });
+    if (buttonIndex === 0) {
+      await shareAsync({ message: `${username}: ${caption}` });
+    }
+  }, [username, caption]);
+
   const renderCaptionParts = useMemo(() => {
     const regex = /#[\w-]+/g;
     const parts: Array<{ text: string; isTag: boolean }> = [];
@@ -137,6 +149,18 @@ export default function PostCard({
             ) : null}
           </View>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.optionsBtn}
+          onPress={handleOptions}
+          activeOpacity={0.7}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Ionicons
+            name="ellipsis-horizontal"
+            size={20}
+            color={colours.textSecondary}
+          />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.mediaCard}>
@@ -193,6 +217,12 @@ const styles = StyleSheet.create({
   },
   postHeader: {
     padding: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  optionsBtn: {
+    padding: 4,
   },
   userRow: {
     flexDirection: "row",

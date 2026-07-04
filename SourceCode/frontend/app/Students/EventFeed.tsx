@@ -35,6 +35,7 @@ import {
   presentPaymentSheet,
 } from "@stripe/stripe-react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { notificationAsync } from "../../modules/haptic-feedback";
 
 const EVENT_CATEGORIES = [
   { label: "All Categories", value: "All" },
@@ -603,6 +604,7 @@ export default function EventFeed() {
                             usedAt: null,
                           };
                           await addTicket(ticket);
+                          notificationAsync("success");
                           Alert.alert(
                             "Payment Successful",
                             "Your ticket has been booked. Would you like to add this event to your calendar?",
@@ -669,6 +671,7 @@ export default function EventFeed() {
                             usedAt: null,
                           };
                           await addTicket(ticket);
+                          notificationAsync("success");
                           Alert.alert(
                             "Ticket Added",
                             "Your ticket is ready. Would you like to add this event to your calendar?",

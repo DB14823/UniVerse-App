@@ -1,0 +1,7 @@
+{
+  "name": "share-sheet",
+  "version": "1.0.0",
+  "description": "Native share sheet for UniVerse",
+  "main": "index.ts",
+  "license": "MIT"
+}

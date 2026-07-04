@@ -39,6 +39,7 @@ import {
 import { useTickets } from "../../contexts/TicketsContext";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
+import { pickImageAsync } from "../../modules/native-image-picker";
 
 type EventItem = {
   id: string;
@@ -367,24 +368,9 @@ export default function EventsOrg() {
   };
 
   const pickImage = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert(
-        "Permission Required",
-        "Please allow access to your photo library.",
-      );
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.85,
-    });
-
-    if (!result.canceled && result.assets?.[0]) {
-      setEditImageUri(result.assets[0].uri);
+    const result = await pickImageAsync();
+    if (!result.canceled && result.uri) {
+      setEditImageUri(result.uri);
     }
   };
 
