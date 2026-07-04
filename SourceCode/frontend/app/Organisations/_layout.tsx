@@ -4,6 +4,14 @@ import { Tabs, usePathname, useRouter } from "expo-router";
 import { registerForPushNotifications } from "../../lib/notifications";
 import LiquidGlassTabBar from "../components/LiquidGlassTabBar";
 
+const HIDE_TAB_BAR_SCREENS = [
+  "createPost",
+  "profileOrg",
+  "profileStudent",
+  "profileOrgSettings",
+  "scanTickets",
+];
+
 export default function OrganisationsLayout() {
   const pathname = usePathname();
   const router = useRouter();
@@ -44,7 +52,15 @@ export default function OrganisationsLayout() {
         <Tabs.Screen name="profileOrg" options={{ href: null }} />
         <Tabs.Screen name="profileStudent" options={{ href: null }} />
       </Tabs>
-      <View style={styles.tabBarOverlay} pointerEvents="box-none">
+      <View
+        style={[
+          styles.tabBarOverlay,
+          HIDE_TAB_BAR_SCREENS.some((s) => pathname.includes(s)) && {
+            display: "none",
+          },
+        ]}
+        pointerEvents="box-none"
+      >
         <LiquidGlassTabBar
           role="org"
           activeTab={activeTab}

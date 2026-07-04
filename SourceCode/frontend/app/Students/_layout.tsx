@@ -6,6 +6,15 @@ import { fetchConversations } from "../../lib/messagesApi";
 import { useSocket, getSocket } from "../hooks/useSocket";
 import LiquidGlassTabBar from "../components/LiquidGlassTabBar";
 
+const HIDE_TAB_BAR_SCREENS = [
+  "conversation",
+  "createPost",
+  "profileStudent",
+  "profileOrg",
+  "profileStudentSettings",
+  "notifications",
+];
+
 export default function StudentsLayout() {
   const pathname = usePathname();
   const router = useRouter();
@@ -87,7 +96,9 @@ export default function StudentsLayout() {
       <View
         style={[
           styles.tabBarOverlay,
-          pathname.includes("conversation") && { display: "none" },
+          HIDE_TAB_BAR_SCREENS.some((s) => pathname.includes(s)) && {
+            display: "none",
+          },
         ]}
         pointerEvents="box-none"
       >

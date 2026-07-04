@@ -50,6 +50,7 @@
     "react-native-gesture-handler": "~2.28.0",
     "react-native-image-crop-picker": "^0.51.1",
     "haptic-feedback": "file:./modules/haptic-feedback",
+    "liquid-glass-surface": "file:./modules/liquid-glass-surface",
     "liquid-glass-tab-bar": "file:./modules/liquid-glass-tab-bar",
     "native-action-sheet": "file:./modules/native-action-sheet",
     "native-image-picker": "file:./modules/native-image-picker",

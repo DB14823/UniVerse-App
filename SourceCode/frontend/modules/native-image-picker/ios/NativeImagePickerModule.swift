@@ -21,15 +21,29 @@ public class NativeImagePickerModule: Module {
 
         guard let rootVC = UIApplication.shared.connectedScenes
           .compactMap({ $0 as? UIWindowScene })
-          .first?.windows.first?.rootViewController else {
-          promise.reject("NO_VC", "Could not find root view controller")
+          .first?.windows.first?.rootViewController,
+          let topVC = topViewController(rootVC) else {
+          promise.reject("NO_VC", "Could not find presenting view controller")
           return
         }
 
-        rootVC.present(picker, animated: true)
+        topVC.present(picker, animated: true)
       }
     }
   }
+}
+
+private func topViewController(_ base: UIViewController?) -> UIViewController? {
+  if let nav = base as? UINavigationController {
+    return topViewController(nav.visibleViewController)
+  }
+  if let tab = base as? UITabBarController {
+    return topViewController(tab.selectedViewController)
+  }
+  if let presented = base?.presentedViewController {
+    return topViewController(presented)
+  }
+  return base
 }
 
 private enum AssociatedKeys {

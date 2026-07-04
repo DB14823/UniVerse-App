@@ -1,0 +1,7 @@
+{
+  "name": "liquid-glass-surface",
+  "version": "1.0.0",
+  "description": "Native UIGlassEffect container view for UniVerse",
+  "main": "index.ts",
+  "license": "MIT"
+}

@@ -1,8 +1,13 @@
 import React from "react";
-import { View, TextInput, StyleSheet, Text } from "react-native";
+import { View, TextInput, StyleSheet } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { colours } from "../../lib/theme/colours";
+import LiquidGlassSurface from "../../modules/liquid-glass-surface";
+
+// Total vertical clearance a screen's scroll content needs at the top:
+// top offset (8) + pill height (116) + gap below (8)
+export const FILTER_BAR_HEIGHT = 132;
 
 type Item = { label: string; value: string };
 
@@ -16,7 +21,6 @@ interface FilterBarProps {
   items: Item[];
   setItems: React.Dispatch<React.SetStateAction<Item[]>>;
   placeholder?: string;
-  // Optional category filter
   categoryValue?: string;
   onSelectCategory?: (v: string) => void;
   categoryOpen?: boolean;
@@ -47,8 +51,11 @@ export default function FilterBar({
   const showCategoryFilter = categoryValue !== undefined && onSelectCategory;
 
   return (
-    <View style={styles.container} accessibilityRole="search">
-      {/* Full-width search bar */}
+    <LiquidGlassSurface
+      style={styles.container}
+      cornerRadius={20}
+      accessibilityRole="search"
+    >
       <View style={styles.searchWrap}>
         <TextInput
           style={styles.searchInput}
@@ -62,50 +69,65 @@ export default function FilterBar({
         <Ionicons name="search" size={18} color={colours.textSecondary} />
       </View>
 
-      {/* Dropdowns side by side */}
       <View style={styles.dropdownsRow}>
-        {showCategoryFilter && categoryOpen !== undefined && setCategoryOpen && categoryItems && setCategoryItems && (
-          <View style={styles.dropdownWrap}>
-            <DropDownPicker
-              open={categoryOpen}
-              value={categoryValue}
-              items={categoryItems}
-              setOpen={setCategoryOpen}
-              setValue={(val: any) => {
-                if (typeof val === "function") {
-                  const resolved = val(categoryValue);
-                  onSelectCategory(resolved);
-                } else {
-                  onSelectCategory(val as string);
-                }
-              }}
-              setItems={setCategoryItems}
-              placeholder={categoryPlaceholder}
-              style={[styles.dropdown, categoryOpen && styles.dropdownOpen]}
-              dropDownContainerStyle={[
-                styles.dropdownContainer,
-                categoryOpen && styles.dropdownContainerOpen,
-              ]}
-              textStyle={styles.dropdownText}
-              labelStyle={styles.dropdownLabel}
-              placeholderStyle={styles.dropdownPlaceholder}
-              listItemLabelStyle={styles.dropdownItemLabel}
-              listItemContainerStyle={styles.dropdownItemContainer}
-              ArrowUpIconComponent={() => (
-                <Ionicons name="chevron-up" size={16} color={colours.textSecondary} />
-              )}
-              ArrowDownIconComponent={() => (
-                <Ionicons name="chevron-down" size={16} color={colours.textSecondary} />
-              )}
-              TickIconComponent={() => (
-                <Ionicons name="checkmark" size={16} color={colours.secondary} />
-              )}
-              listMode="SCROLLVIEW"
-              zIndex={1000}
-              zIndexInverse={1000}
-            />
-          </View>
-        )}
+        {showCategoryFilter &&
+          categoryOpen !== undefined &&
+          setCategoryOpen &&
+          categoryItems &&
+          setCategoryItems && (
+            <View style={styles.dropdownWrap}>
+              <DropDownPicker
+                open={categoryOpen}
+                value={categoryValue}
+                items={categoryItems}
+                setOpen={setCategoryOpen}
+                setValue={(val: any) => {
+                  if (typeof val === "function") {
+                    const resolved = val(categoryValue);
+                    onSelectCategory(resolved);
+                  } else {
+                    onSelectCategory(val as string);
+                  }
+                }}
+                setItems={setCategoryItems}
+                placeholder={categoryPlaceholder}
+                style={[styles.dropdown, categoryOpen && styles.dropdownOpen]}
+                dropDownContainerStyle={[
+                  styles.dropdownContainer,
+                  categoryOpen && styles.dropdownContainerOpen,
+                ]}
+                textStyle={styles.dropdownText}
+                labelStyle={styles.dropdownLabel}
+                placeholderStyle={styles.dropdownPlaceholder}
+                listItemLabelStyle={styles.dropdownItemLabel}
+                listItemContainerStyle={styles.dropdownItemContainer}
+                ArrowUpIconComponent={() => (
+                  <Ionicons
+                    name="chevron-up"
+                    size={16}
+                    color={colours.textSecondary}
+                  />
+                )}
+                ArrowDownIconComponent={() => (
+                  <Ionicons
+                    name="chevron-down"
+                    size={16}
+                    color={colours.textSecondary}
+                  />
+                )}
+                TickIconComponent={() => (
+                  <Ionicons
+                    name="checkmark"
+                    size={16}
+                    color={colours.secondary}
+                  />
+                )}
+                listMode="SCROLLVIEW"
+                zIndex={1000}
+                zIndexInverse={1000}
+              />
+            </View>
+          )}
 
         <View style={styles.dropdownWrap}>
           <DropDownPicker
@@ -134,10 +156,18 @@ export default function FilterBar({
             listItemLabelStyle={styles.dropdownItemLabel}
             listItemContainerStyle={styles.dropdownItemContainer}
             ArrowUpIconComponent={() => (
-              <Ionicons name="chevron-up" size={16} color={colours.textSecondary} />
+              <Ionicons
+                name="chevron-up"
+                size={16}
+                color={colours.textSecondary}
+              />
             )}
             ArrowDownIconComponent={() => (
-              <Ionicons name="chevron-down" size={16} color={colours.textSecondary} />
+              <Ionicons
+                name="chevron-down"
+                size={16}
+                color={colours.textSecondary}
+              />
             )}
             TickIconComponent={() => (
               <Ionicons name="checkmark" size={16} color={colours.secondary} />
@@ -148,28 +178,30 @@ export default function FilterBar({
           />
         </View>
       </View>
-    </View>
+    </LiquidGlassSurface>
   );
 }
 
 const styles = StyleSheet.create({
+  // Positioning only — background and border are owned by the native glass view.
   container: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 12,
-    backgroundColor: colours.background,
+    position: "absolute",
+    top: 8,
+    left: 12,
+    right: 12,
+    padding: 12,
   },
 
   searchWrap: {
     height: 44,
     borderRadius: 999,
-    backgroundColor: colours.glass,
+    backgroundColor: "rgba(255,255,255,0.08)",
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 14,
     justifyContent: "space-between",
     borderWidth: 1,
-    borderColor: colours.border,
+    borderColor: "rgba(255,255,255,0.12)",
     marginBottom: 8,
   },
 
@@ -179,7 +211,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     paddingRight: 10,
   },
-
 
   dropdownsRow: {
     flexDirection: "row",
@@ -194,7 +225,7 @@ const styles = StyleSheet.create({
   dropdown: {
     backgroundColor: "rgba(255,255,255,0.10)",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.06)",
+    borderColor: "rgba(255,255,255,0.10)",
     borderRadius: 20,
     height: 40,
   },

@@ -19,7 +19,7 @@ import {
   ScrollView,
   Image,
 } from "react-native";
-import FilterBar from "../components/FilterBar";
+import FilterBar, { FILTER_BAR_HEIGHT } from "../components/FilterBar";
 import EventCard from "../components/EventCard";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -438,6 +438,26 @@ export default function EventsOrg() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
+      <FlatList
+        data={visibleEvents}
+        renderItem={renderEvent}
+        keyExtractor={keyExtractor}
+        style={styles.scrollArea}
+        contentContainerStyle={{
+          paddingTop: FILTER_BAR_HEIGHT + 8,
+          paddingBottom: 100,
+        }}
+        keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
+        ListHeaderComponent={renderSectionTitle}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={10}
+        initialNumToRender={5}
+        updateCellsBatchingPeriod={50}
+      />
       <FilterBar
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -451,24 +471,6 @@ export default function EventsOrg() {
         items={items}
         setItems={setItems}
         placeholder="Filter"
-      />
-
-      <FlatList
-        data={visibleEvents}
-        renderItem={renderEvent}
-        keyExtractor={keyExtractor}
-        style={styles.scrollArea}
-        contentContainerStyle={{ paddingTop: 10, paddingBottom: 100 }}
-        keyboardShouldPersistTaps="handled"
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-        }
-        ListHeaderComponent={renderSectionTitle}
-        removeClippedSubviews={true}
-        maxToRenderPerBatch={10}
-        windowSize={10}
-        initialNumToRender={5}
-        updateCellsBatchingPeriod={50}
       />
 
       <Modal

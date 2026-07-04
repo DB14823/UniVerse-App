@@ -14,7 +14,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import FilterBar from "../components/FilterBar";
+import FilterBar, { FILTER_BAR_HEIGHT } from "../components/FilterBar";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colours } from "../../lib/theme/colours";
 import { Spacing } from "../../lib/theme/spacing";
@@ -320,36 +320,15 @@ export default function EventFeed() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      <View style={styles.filterBarContainer}>
-        <FilterBar
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          selectedValue={value}
-          onSelectValue={(val) => {
-            setValue(val);
-            setSelectedDay(val ?? "All");
-          }}
-          open={open}
-          setOpen={setOpen}
-          items={items}
-          setItems={setItems}
-          placeholder="Filter"
-          categoryValue={selectedCategory}
-          onSelectCategory={(val) => setSelectedCategory(val ?? "All")}
-          categoryOpen={categoryOpen}
-          setCategoryOpen={setCategoryOpen}
-          categoryItems={categoryItems}
-          setCategoryItems={setCategoryItems}
-          categoryPlaceholder="Category"
-        />
-      </View>
-
       <FlatList
         data={visibleEvents}
         renderItem={renderEvent}
         keyExtractor={keyExtractor}
         style={styles.scrollArea}
-        contentContainerStyle={{ paddingTop: 20, paddingBottom: 100 }}
+        contentContainerStyle={{
+          paddingTop: FILTER_BAR_HEIGHT + 8,
+          paddingBottom: 100,
+        }}
         keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
@@ -373,6 +352,27 @@ export default function EventFeed() {
         windowSize={10}
         initialNumToRender={5}
         updateCellsBatchingPeriod={50}
+      />
+      <FilterBar
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        selectedValue={value}
+        onSelectValue={(val) => {
+          setValue(val);
+          setSelectedDay(val ?? "All");
+        }}
+        open={open}
+        setOpen={setOpen}
+        items={items}
+        setItems={setItems}
+        placeholder="Filter"
+        categoryValue={selectedCategory}
+        onSelectCategory={(val) => setSelectedCategory(val ?? "All")}
+        categoryOpen={categoryOpen}
+        setCategoryOpen={setCategoryOpen}
+        categoryItems={categoryItems}
+        setCategoryItems={setCategoryItems}
+        categoryPlaceholder="Category"
       />
       <Modal
         visible={Boolean(selectedEvent)}
@@ -739,10 +739,6 @@ export default function EventFeed() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colours.background,
-  },
-
-  filterBarContainer: {
     backgroundColor: colours.background,
   },
 

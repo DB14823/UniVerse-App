@@ -1,6 +1,19 @@
 import UIKit
 import ExpoModulesCore
 
+private func topViewController(_ base: UIViewController?) -> UIViewController? {
+  if let nav = base as? UINavigationController {
+    return topViewController(nav.visibleViewController)
+  }
+  if let tab = base as? UITabBarController {
+    return topViewController(tab.selectedViewController)
+  }
+  if let presented = base?.presentedViewController {
+    return topViewController(presented)
+  }
+  return base
+}
+
 public class NativeActionSheetModule: Module {
   public func definition() -> ModuleDefinition {
     Name("NativeActionSheet")
@@ -35,23 +48,24 @@ public class NativeActionSheetModule: Module {
 
         guard let rootVC = UIApplication.shared.connectedScenes
           .compactMap({ $0 as? UIWindowScene })
-          .first?.windows.first?.rootViewController else {
-          promise.reject("NO_VC", "Could not find root view controller")
+          .first?.windows.first?.rootViewController,
+          let topVC = topViewController(rootVC) else {
+          promise.reject("NO_VC", "Could not find presenting view controller")
           return
         }
 
         // iPad requires popover anchor
         if let popover = alert.popoverPresentationController {
-          popover.sourceView = rootVC.view
+          popover.sourceView = topVC.view
           popover.sourceRect = CGRect(
-            x: rootVC.view.bounds.midX,
-            y: rootVC.view.bounds.midY,
+            x: topVC.view.bounds.midX,
+            y: topVC.view.bounds.midY,
             width: 0, height: 0
           )
           popover.permittedArrowDirections = []
         }
 
-        rootVC.present(alert, animated: true)
+        topVC.present(alert, animated: true)
       }
     }
   }
